@@ -85,8 +85,8 @@ class Mtsalegraapi extends Module
         Configuration::deleteByName('mts_AlgApi_Tooltips');
         Configuration::deleteByName('mts_AlgApi_User');
         Configuration::deleteByName('mts_AlgApi_Password');
-        Configuration::deleteByName('mts_AlgApi_Email');
-        Configuration::deleteByName('mts_AlgApi_Token');
+//        Configuration::deleteByName('mts_AlgApi_Email');
+//        Configuration::deleteByName('mts_AlgApi_Token');
 
         include(dirname(__FILE__).'/sql/uninstall.php');
 

@@ -44,42 +44,47 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
             Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED')));
         }
 
-        $mtsSql = new DbQuery();
-        $mtsSql->select('*')
-               ->from('mtsalegraapi_contacts');
-        $mts_contact = Db::getInstance()->executeS($mtsSql);
+        echo "<pre>";
 
         $storeSql = new DbQuery();
         $storeSql->select('*')
                  ->from('customer');
         $store_contact = Db::getInstance()->executeS($storeSql);
 
-        if (count($mts_contact) != 0) {
-            echo "To do <br>";
+        $mtsSql = new DbQuery();
+        $mtsSql->select('*')
+            ->from('customer');
+        $mts_contact = Db::getInstance()->executeS($mtsSql);
 
-        } else {
-            //  First Execution (Module recently installed)
-            if (count($store_contact) > 0 && $store_contact[0]['id_customer'] == 1 && $store_contact[0]['firstname'] = "John") {
-                echo "Have to ignore this guy <br>";
-                $response = Db::getInstance()->insert('mtsalegraapi_contacts', array(
-                    'id_contact_store'  => 1,
-                    'id_contact_alegra' => 0,
-                    'contact_ignored' => true
-                ));
-
-                echo "<pre>";
-                print_r($response);
-                echo "</pre>";
-            }
+        //  First Execution (Module recently installed)
+        if (count($store_contact) > 0 && count($mts_contact) == 0 && $store_contact[0]['id_customer'] == 1 && $store_contact[0]['firstname'] = "John" && $store_contact[0]['lastName'] = "DOE" && $store_contact[0]['email'] = "pub@prestashop.com") {
+            Db::getInstance()->insert('mtsalegraapi_contacts', array(
+                'id_contact_store'  => 1,
+                'id_contact_alegra' => 0,
+                'contact_ignored' => true
+            ));
         }
 
-//        echo "<pre>";
-//        print_r($mts_contact);
-//        echo "<br>";
-//        print_r($store_contact);
-//        echo "</pre>";
-        echo "<br>";
+        $mtsQuery = new DbQuery();
+        $mtsQuery->select('id_customer')
+            ->from('customer')
+            ->leftJoin('mtsalegraapi_contacts',null,'ps_customer.id_customer = ps_mtsalegraapi_contacts.id_contact_store')
+            ->where('ps_mtsalegraapi_contacts.id_contact_alegra is NULL');
+        $mts_join = Db::getInstance()->executeS($mtsQuery);
 
-        die('ContactCreate');
+        print_r($mts_join);
+
+        $unregisteredContacts = array();
+
+        foreach ($mts_join as $key => $value){
+            $unregisteredContacts[] = $value['id_customer'];
+        }
+
+        print_r($unregisteredContacts);
+        echo "<br>";
+        echo "ContactCreate";
+        echo "<br>";
+        echo "</pre>";
+        die();
     }
 }
