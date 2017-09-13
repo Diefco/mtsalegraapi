@@ -44,35 +44,42 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
             Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED')));
         }
 
-        $sql1 = new DbQuery();
-        $sql1->select('*')
-            ->from('mtsalegraapi_contacts');
-        $mts_contact = Db::getInstance()->executeS($sql1);
+        $mtsSql = new DbQuery();
+        $mtsSql->select('*')
+               ->from('mtsalegraapi_contacts');
+        $mts_contact = Db::getInstance()->executeS($mtsSql);
 
-        $sql2 = new DbQuery();
-        $sql2->select('*')
-            ->from('customer');
-        $store_contact = Db::getInstance()->executeS($sql2);
+        $storeSql = new DbQuery();
+        $storeSql->select('*')
+                 ->from('customer');
+        $store_contact = Db::getInstance()->executeS($storeSql);
 
         if (count($mts_contact) != 0) {
-            echo "mts con valores";
-        } else {
-            echo "mts con vacío";
-        }
-        echo "<br>";
-        if (count($store_contact) != 0) {
-            echo "store con valores";
-        } else {
-            echo "store con vacío";
-        }
+            echo "To do <br>";
 
-        
+        } else {
+            //  First Execution (Module recently installed)
+            if (count($store_contact) > 0 && $store_contact[0]['id_customer'] == 1 && $store_contact[0]['firstname'] = "John") {
+                echo "Have to ignore this guy <br>";
+                $response = Db::getInstance()->insert('mtsalegraapi_contacts', array(
+                    'id_contact_store'  => 1,
+                    'id_contact_alegra' => 0,
+                    'contact_ignored' => true
+                ));
+
+                echo "<pre>";
+                print_r($response);
+                echo "</pre>";
+            }
+        }
 
 //        echo "<pre>";
 //        print_r($mts_contact);
 //        echo "<br>";
 //        print_r($store_contact);
 //        echo "</pre>";
+        echo "<br>";
+
         die('ContactCreate');
     }
 }
