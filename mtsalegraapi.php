@@ -70,8 +70,8 @@ class Mtsalegraapi extends Module
         Configuration::updateValue('mts_AlgApi_Tooltips', true);
         Configuration::updateValue('mts_AlgApi_User', '');
         Configuration::updateValue('mts_AlgApi_Password', '');
-        Configuration::updateValue('mts_AlgApi_Email', '');
-        Configuration::updateValue('mts_AlgApi_Token', '');
+//        Configuration::updateValue('mts_AlgApi_Email', '');
+//        Configuration::updateValue('mts_AlgApi_Token', '');
 
         include(dirname(__FILE__).'/sql/install.php');
 
