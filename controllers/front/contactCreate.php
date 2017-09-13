@@ -44,6 +44,35 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
             Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED')));
         }
 
+        $sql1 = new DbQuery();
+        $sql1->select('*')
+            ->from('mtsalegraapi_contacts');
+        $mts_contact = Db::getInstance()->executeS($sql1);
+
+        $sql2 = new DbQuery();
+        $sql2->select('*')
+            ->from('customer');
+        $store_contact = Db::getInstance()->executeS($sql2);
+
+        if (count($mts_contact) != 0) {
+            echo "mts con valores";
+        } else {
+            echo "mts con vacío";
+        }
+        echo "<br>";
+        if (count($store_contact) != 0) {
+            echo "store con valores";
+        } else {
+            echo "store con vacío";
+        }
+
+        
+
+//        echo "<pre>";
+//        print_r($mts_contact);
+//        echo "<br>";
+//        print_r($store_contact);
+//        echo "</pre>";
         die('ContactCreate');
     }
 }
