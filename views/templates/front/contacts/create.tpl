@@ -34,6 +34,13 @@
         <form action="" method="post" class="form-inline">
             <div class="form-group">
                 {*//TODO Hacer la tabla con el campo necesario para cada valor en el arreglo $customerBundle*}
+                <table class=" table table-bordered table-condensed table-striped">
+                    <tr>
+                        <th>
+                            {l s='Ejemplo' mod='mtsalegraapi'}
+                        </th>
+                    </tr>
+                </table>
             </div>
             <input type="submit" value="Enviar" class="btn btn-success">
         </form>
