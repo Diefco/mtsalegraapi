@@ -44,20 +44,18 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
             Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED')));
         }
 
-        echo "<pre>";
-
         $storeSql = new DbQuery();
-        $storeSql->select('*')
+        $storeSql->select('id_customer, firstname, lastname, email')
                  ->from('customer');
         $store_contact = Db::getInstance()->executeS($storeSql);
 
         $mtsSql = new DbQuery();
-        $mtsSql->select('*')
-            ->from('customer');
+        $mtsSql->select('id_contact_store')
+            ->from('mtsalegraapi_contacts');
         $mts_contact = Db::getInstance()->executeS($mtsSql);
 
         //  First Execution (Module recently installed)
-        if (count($store_contact) > 0 && count($mts_contact) == 0 && $store_contact[0]['id_customer'] == 1 && $store_contact[0]['firstname'] = "John" && $store_contact[0]['lastName'] = "DOE" && $store_contact[0]['email'] = "pub@prestashop.com") {
+        if (count($store_contact) > 0 && count($mts_contact) == 0 && $store_contact[0]['id_customer'] == 1 && $store_contact[0]['firstname'] = "John" && $store_contact[0]['lastname'] = "DOE" && $store_contact[0]['email'] = "pub@prestashop.com") {
             Db::getInstance()->insert('mtsalegraapi_contacts', array(
                 'id_contact_store'  => 1,
                 'id_contact_alegra' => 0,
@@ -72,19 +70,56 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
             ->where('ps_mtsalegraapi_contacts.id_contact_alegra is NULL');
         $mts_join = Db::getInstance()->executeS($mtsQuery);
 
-        print_r($mts_join);
-
-        $unregisteredContacts = array();
+        $customerBundle = array();
 
         foreach ($mts_join as $key => $value){
-            $unregisteredContacts[] = $value['id_customer'];
+            //  Requesting necessary customer information
+            $customerInfoQuery = new DbQuery();
+            $customerInfoQuery->select('firstname, lastname, email, company, date_upd')
+                              ->from('customer')
+                              ->where('id_customer='.$value['id_customer']);
+            $customerInfo = Db::getInstance()->executeS($customerInfoQuery);
+
+            //  Requesting necessary customer address
+            $customerAddressQuery = new DbQuery();
+            $customerAddressQuery->select('dni, phone, phone_mobile, alias, company, address1, address2, city, id_country, id_state, date_upd')
+                                 ->from('address')
+                                 ->where('id_customer='.$value['id_customer']);
+            $customerAddress = Db::getInstance()->executeS($customerAddressQuery);
+
+            foreach ($customerAddress as $key => $value) {
+                //  Requesting country of customer address
+                $countryAddressQuery = new DbQuery();
+                $countryAddressQuery->select('iso_code')
+                                     ->from('country')
+                                     ->where('id_country='.$value['id_country']);
+                $countryAddress = Db::getInstance()->executeS($countryAddressQuery);
+
+                //  Requesting state of customer address
+                $stateAddressQuery = new DbQuery();
+                $stateAddressQuery->select('name')
+                    ->from('state')
+                    ->where('id_state='.$value['id_state']);
+                $stateAddress = Db::getInstance()->executeS($stateAddressQuery);
+
+                $customerAddress[$key]['iso_code_country'] = $countryAddress[0]['iso_code'];
+                $customerAddress[$key]['state_name'] = $stateAddress[0]['name'];
+            }
+
+            $customerInfo = array('info' => $customerInfo[0]);
+
+            $customerInfo['address'] = $customerAddress;
+
+            $customerBundle[] = $customerInfo;
         }
 
-        print_r($unregisteredContacts);
-        echo "<br>";
-        echo "ContactCreate";
-        echo "<br>";
-        echo "</pre>";
-        die();
+//        echo "<pre>";
+//        print_r($customerBundle);
+//        echo "</pre>";
+//        die();
+
+        $this->context->smarty->assign('customerBundle', $customerBundle);
+        $this->context->smarty->assign('backLink', $this->context->link->getModuleLink('mtsalegraapi', 'home', array(), Configuration::get('PS_SSL_ENABLED')));
+        $this->setTemplate('contacts/create.tpl');
     }
 }
