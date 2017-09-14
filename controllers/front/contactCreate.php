@@ -53,9 +53,7 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
 
         $authToken = base64_encode(Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token'));
 
-        echo "<pre>";
-        print_r(Tools::getAllValues());
-        echo "</pre>";
+        $limitQuery = Configuration::get('mts_AlgApi_limitQuery');
 
         $mtsSql = new DbQuery();
         $mtsSql->select('id_contact_store')
@@ -86,7 +84,9 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         $mtsQuery->select('id_customer')
             ->from('customer')
             ->leftJoin('mtsalegraapi_contacts', null, 'ps_customer.id_customer = ps_mtsalegraapi_contacts.id_contact_store')
-            ->where('ps_mtsalegraapi_contacts.id_contact_alegra is NULL');
+            ->where('ps_mtsalegraapi_contacts.id_contact_alegra is NULL')
+            ->limit('10')
+            ->orderBy('id_customer');
         $mts_join = Db::getInstance()->executeS($mtsQuery);
 
         $customerBundle = array();
@@ -169,6 +169,12 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
                 $customersArray[$customerKey]['dniUnique'] = 'false';
             }
         }
+
+        echo "<pre>";
+        print_r(Tools::getAllValues());
+        echo "</pre>";
+
+
 
         $this->context->smarty->assign('customers', $customersArray);
         $this->context->smarty->assign('backLink', $this->context->link->getModuleLink('mtsalegraapi', 'home', array(), Configuration::get('PS_SSL_ENABLED')));
