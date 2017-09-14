@@ -27,6 +27,8 @@
 * @version 1.1.0
 *}
 
+{*TODO Fix to show up by default this info when the module is installed/reinstalled*}
+
 <div class="panel" style="{$displayTooltip|escape:'htmlall':'UTF-8'}">
 	<h3><i class="icon icon-line-chart"></i> {l s='Metasysco.com - Facturación electrónica a través de Alegra' mod='mtsalegraapi'}</h3>
 	<p>
