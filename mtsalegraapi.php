@@ -67,11 +67,12 @@ class Mtsalegraapi extends Module
      */
     public function install()
     {
-        Configuration::updateValue('mts_AlgApi_Tooltips', true);
+        Configuration::updateValue('mts_AlgApi_Tooltips', 'false');
         Configuration::updateValue('mts_AlgApi_User', '');
         Configuration::updateValue('mts_AlgApi_Password', '');
 //        Configuration::updateValue('mts_AlgApi_Email', '');
 //        Configuration::updateValue('mts_AlgApi_Token', '');
+        Configuration::updateValue('mts_AlgApi_limitQuery', '5');
 
         include(dirname(__FILE__).'/sql/install.php');
 
@@ -87,6 +88,7 @@ class Mtsalegraapi extends Module
         Configuration::deleteByName('mts_AlgApi_Password');
 //        Configuration::deleteByName('mts_AlgApi_Email');
 //        Configuration::deleteByName('mts_AlgApi_Token');
+        Configuration::deleteByName('mts_AlgApi_limitQuery');
 
         include(dirname(__FILE__).'/sql/uninstall.php');
 
@@ -121,14 +123,6 @@ class Mtsalegraapi extends Module
                 }
             }
         }
-
-        if (Tools::getValue('mts_AlgApi_Tooltips')) {
-            $displayTooltip = '';
-        } else {
-            $displayTooltip = 'display: none;';
-        }
-
-        $this->context->smarty->assign('displayTooltip', $displayTooltip);
 
         /**
          * If the Platform Login Form was sent, confirm if all fields was filled.
@@ -165,6 +159,14 @@ class Mtsalegraapi extends Module
                 }
             }
         }
+
+        if (Tools::getValue('mts_AlgApi_Tooltips')) {
+            $defineShowTooltip = "true";
+        } else {
+            $defineShowTooltip = "false";
+        }
+
+        $this->context->smarty->assign('displayTooltip', $defineShowTooltip);
 
         /**
          * Set in a smarty variable, the module dir path
@@ -239,6 +241,29 @@ class Mtsalegraapi extends Module
      */
     protected function getConfigForm()
     {
+        $limitOptions = array(
+            'query' => array(
+                array(
+                    'id_limit' => '5',
+                    'name' => '5'
+                ),
+                array(
+                    'id_limit' => '10',
+                    'name' => '10'
+                ),
+                array(
+                    'id_limit' => '20',
+                    'name' => '20'
+                ),
+                array(
+                    'id_limit' => '30',
+                    'name' => '30'
+                ),
+            ),
+            'id' => 'id_limit',
+            'name' => 'name'
+        );
+
         $tooltip_form = array(
             'form' => array(
                 'legend' => array(
@@ -248,10 +273,10 @@ class Mtsalegraapi extends Module
                 'input' => array(
                     array(
                         'type' => 'switch',
-                        'label' => $this->l('¿Desea ver las ayudas?'),
+                        'label' => $this->l('¿Desea ocultar las ayudas?'),
                         'name' => 'mts_AlgApi_Tooltips',
                         'is_bool' => true,
-                        'desc' => $this->l('Active o desactive esta opción para mostrar las ayudas la próxima vez que ingrese a la configuración de este módulo.'),
+                        'desc' => $this->l('Active o desactive esta opción para ocultar las ayudas la próxima vez que ingrese a la configuración de este módulo. Puede volver a reactivarlas cuando lo necesite'),
                         'values' => array(
                             array(
                                 'id' => 'active_on',
@@ -323,10 +348,18 @@ class Mtsalegraapi extends Module
                     array(
                         'type' => 'text',
                         'label' => $this->l('Token'),
-                        'desc' => $this->l('Ingrese el Token brindado por la plataforma de Alegra. Si no cuenta con uno, solicitelo.'),
+                        'desc' => $this->l('Ingrese el Token brindado por la plataforma de Alegra. Si no cuenta con uno, solicítelo a través de la misma plataforma.'),
                         'name' => 'mts_AlgApi_Token',
                         'required' => true
-                    )
+                    ),
+                    array(
+                        'type' => 'select',
+                        'label' => $this->l('Limite de resultados'),
+                        'desc' => $this->l('Seleccione el limite de resultados que desea ver en la creación de productos, contactos o facturas. Entre menor sea el límite, mejor será el rendimiento.'),
+                        'name' => 'mts_AlgApi_limitQuery',
+                        'required' => false,
+                        'options' => $limitOptions
+                    ),
                 ),
                 'submit' => array(
                     'title' => $this->l('Guardar'),
@@ -349,7 +382,8 @@ class Mtsalegraapi extends Module
                 'mts_AlgApi_User',
                 'mts_AlgApi_Password',
                 'mts_AlgApi_Email',
-                'mts_AlgApi_Token'
+                'mts_AlgApi_Token',
+                'mts_AlgApi_limitQuery'
             )
         );
 
