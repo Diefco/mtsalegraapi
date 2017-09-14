@@ -45,6 +45,15 @@ class MtsAlegraApiInvoiceConsultOneModuleFrontController extends ModuleFrontCont
         }
 
         /**
+         * !!!DISCLAIMER!!!
+         * https://developer.alegra.com/v1/docs/autenticacion
+         * Base64 encoding required from ALegra API: Must be used to generate an Authentication Token.
+         * Otherwise, this module will not work properly.
+         */
+
+        $authToken = base64_encode(Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token'));
+
+        /**
          * https://app.alegra.com/api/v1/invoices/<id_invoice>
          * @var int id_product      Required       Must contain the Invoice ID registered on ALEGRA
          */
@@ -56,7 +65,7 @@ class MtsAlegraApiInvoiceConsultOneModuleFrontController extends ModuleFrontCont
             $headers = array(
                 'Accept: application/json',
                 'Content-Type: application/json; charset=utf-8',
-                'Authorization: Basic ' . base64_encode(Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token'))
+                'Authorization: Basic ' . $authToken
             );
 
             $ch = curl_init();

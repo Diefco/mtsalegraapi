@@ -44,6 +44,15 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
             Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED')));
         }
 
+        /**
+         * !!!DISCLAIMER!!!
+         * https://developer.alegra.com/v1/docs/autenticacion
+         * Base64 encoding required from ALegra API: Must be used to generate an Authentication Token.
+         * Otherwise, this module will not work properly.
+         */
+
+        $authToken = base64_encode(Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token'));
+
         die('ProductCreate');
     }
 }
