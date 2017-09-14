@@ -57,23 +57,29 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         print_r(Tools::getAllValues());
         echo "</pre>";
 
-        $storeSql = new DbQuery();
-        $storeSql->select('id_customer, firstname, lastname, email')
-                 ->from('customer');
-        $store_contact = Db::getInstance()->executeS($storeSql);
-
         $mtsSql = new DbQuery();
         $mtsSql->select('id_contact_store')
-            ->from('mtsalegraapi_contacts');
+            ->from('mtsalegraapi_contacts')
+            ->limit('1')
+            ->orderBy('id_contact_store');
         $mts_contact = Db::getInstance()->executeS($mtsSql);
 
-        //  First Execution (Module recently installed)
-        if (count($store_contact) > 0 && count($mts_contact) == 0 && $store_contact[0]['id_customer'] == 1 && $store_contact[0]['firstname'] = "John" && $store_contact[0]['lastname'] = "DOE" && $store_contact[0]['email'] = "pub@prestashop.com") {
-            Db::getInstance()->insert('mtsalegraapi_contacts', array(
-                'id_contact_store'  => 1,
-                'id_contact_alegra' => 0,
-                'contact_ignored' => true
-            ));
+        if (count($mts_contact) == 0) {
+            $storeSql = new DbQuery();
+            $storeSql->select('id_customer, firstname, lastname, email')
+                ->from('customer')
+                ->limit('1')
+                ->orderBy('id_customer');
+            $store_contact = Db::getInstance()->executeS($storeSql);
+
+            //  First Execution (Module recently installed)
+            if (count($store_contact) > 0 && $store_contact[0]['id_customer'] == 1 && $store_contact[0]['firstname'] = "John" && $store_contact[0]['lastname'] = "DOE" && $store_contact[0]['email'] = "pub@prestashop.com") {
+                Db::getInstance()->insert('mtsalegraapi_contacts', array(
+                    'id_contact_store'  => 1,
+                    'id_contact_alegra' => 0,
+                    'contact_ignored' => true
+                ));
+            }
         }
 
         $mtsQuery = new DbQuery();
