@@ -83,13 +83,13 @@
                         {/if}
                     <tr>
                         <td>
-                            check button
+                            <input type="checkbox" name="customer_{$idCustomer|escape:'htmlall':'UTF-8'}_check" value="true">
                         </td>
                         <td>
                             {if isset($customer.name) || isset($customer.name)}
                                 {$customer.name|escape:'htmlall':'UTF-8'}
                             {else}
-                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_name">
+                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_name" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_name">
                             {/if}
                         </td>
                         <td>
@@ -97,113 +97,125 @@
                                 {if $addressExist}
                                     {$customer.addressData.0.dni|escape:'htmlall':'UTF-8'}
                                 {else}
-                                    <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_dni">
+                                    <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_dni" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_dni">
                                 {/if}
                             {elseif $addressExist}
-                                <select>
+                                <select id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_dni" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_dni">
+                                    <option value="0">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
                                     {*{foreach from=$customer.addressData item=address}*}
                                         {for $counter=0 to {$customer.addressData|@count}-1}
-                                            <option value="{$customer.addressData.$counter.dni}">{$customer.addressData.$counter.dni}</option>
+                                            <option value="{$counter|escape:'htmlall':'UTF-8'}">{$customer.addressData.$counter.dni}</option>
                                         {/for}
                                     {*{/foreach}*}
                                 </select>
                             {/if}
                         </td>
                         <td>
-                            {$customer.email}
+                            {$customer.email|escape:'htmlall':'UTF-8'}
                         </td>
                         <td>
                             {if $addressExist && $addressExist}
                                 {if {$customer.addressData|@count} > 1}
-                                    <select>
+                                    <select id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_dni" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_dni">
+                                        <option value="0">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
                                         {for $counter=0 to {$customer.addressData|@count}-1}
-                                            <option value="{$customer.addressData.{$counter}.alias}">{$customer.addressData.{$counter}.alias}</option>
+                                            <option value="{$counter|escape:'htmlall':'UTF-8'}">{$customer.addressData.{$counter}.alias}</option>
                                         {/for}
                                     </select>
                                 {else}
-                                    {$customer.addressData.0.alias}
+                                    {$customer.addressData.0.alias|escape:'htmlall':'UTF-8'}
                                 {/if}
                             {else}
-                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_alias">
+                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_alias" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_alias">
                             {/if}
                         </td>
                         <td>
                             {if $addressExist}
                                 {if {$customer.addressData|@count} > 1}
-                                    <select>
+                                    <select id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone">
+                                        <option value="0">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
                                         {for $counter=0 to {$customer.addressData|@count}-1}
-                                            <option value="{$customer.addressData.{$counter}.phone}">{$customer.addressData.{$counter}.phone}</option>
+                                            <option value="{$counter|escape:'htmlall':'UTF-8'}">{$customer.addressData.{$counter}.phone}</option>
                                         {/for}
                                     </select>
                                 {else}
-                                    {$customer.addressData.0.phone}
+                                    {$customer.addressData.0.phone|escape:'htmlall':'UTF-8'}
                                 {/if}
                             {else}
-                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone">
+                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone">
                             {/if}
                         </td>
                         <td>
                             {if $addressExist}
                                 {if {$customer.addressData|@count} > 1}
-                                    <select>
+                                    <select id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone_mobile" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone_mobile">
+                                        <option value="0">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
                                         {for $counter=0 to {$customer.addressData|@count}-1}
-                                            <option value="{$customer.addressData.{$counter}.phone_mobile}">{$customer.addressData.{$counter}.phone_mobile}</option>
+                                            <option value="{$counter|escape:'htmlall':'UTF-8'}">{$customer.addressData.{$counter}.phone_mobile}</option>
                                         {/for}
                                     </select>
                                 {else}
-                                    {$customer.addressData.0.phone_mobile}
+                                    {$customer.addressData.0.phone_mobile|escape:'htmlall':'UTF-8'}
                                 {/if}
                             {else}
-                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone_mobile">
+                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone_mobile" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone_mobile">
                             {/if}
                         </td>
                         <td>
-                            {if isset($customer.addressData) && !empty($customer.addressData)}
+                            {if $addressExist}
                                 {if {$customer.addressData|@count} > 1}
-                                    <select>
+                                    <select id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_address" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_address">
+                                        <option value="0">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
                                         {for $counter=0 to {$customer.addressData|@count}-1}
-                                            <option value="{$customer.addressData.{$counter}.address1}">{$customer.addressData.{$counter}.address1}</option>
+                                            <option value="{$counter|escape:'htmlall':'UTF-8'}">{$customer.addressData.{$counter}.address1|escape:'htmlall':'UTF-8'}
+                                                {if isset($customer.addressData.0.address2) && !empty($customer.addressData.0.address2)}
+                                                    , {$customer.addressData.0.address2|escape:'htmlall':'UTF-8'}
+                                                {/if}
+                                            </option>
                                         {/for}
                                     </select>
                                 {else}
-                                    {$customer.addressData.0.address1}
+                                    {$customer.addressData.0.address1|escape:'htmlall':'UTF-8'}
                                     {if isset($customer.addressData.0.address2) && !empty($customer.addressData.0.address2)}
-                                        , {$customer.addressData.0.address2}
-
+                                        , {$customer.addressData.0.address2|escape:'htmlall':'UTF-8'}
                                     {/if}
                                 {/if}
                             {else}
-                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_address">
+                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_address" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_address">
                             {/if}
                         </td>
                         <td>
                             {if $addressExist}
                                 {if {$customer.addressData|@count} > 1}
-                                    <select>
+                                    <select id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_location" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_location">
+                                        <option value="0">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
                                         {for $counter=0 to {$customer.addressData|@count}-1}
-                                            <option value="{$customer.addressData.{$counter}.city}/{$customer.addressData.{$counter}.state}/{$customer.addressData.{$counter}.country}">{$customer.addressData.{$counter}.city}/{$customer.addressData.{$counter}.state}/{$customer.addressData.{$counter}.country}</option>
+                                            <option value="{$counter|escape:'htmlall':'UTF-8'}">{$customer.addressData.{$counter}.city|escape:'htmlall':'UTF-8'}/{$customer.addressData.{$counter}.state|escape:'htmlall':'UTF-8'}/{$customer.addressData.{$counter}.country|escape:'htmlall':'UTF-8'}</option>
                                         {/for}
                                     </select>
                                 {else}
-                                    {$customer.addressData.0.city}/{$customer.addressData.0.state}/{$customer.addressData.0.country}
+                                    {$customer.addressData.0.city|escape:'htmlall':'UTF-8'}/{$customer.addressData.0.state|escape:'htmlall':'UTF-8'}/{$customer.addressData.0.country|escape:'htmlall':'UTF-8'}
                                 {/if}
                             {else}
-                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_location">
+                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_location" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_location">
                             {/if}
                         </td>
                         <td>
-                            <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_observations">
+                            <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_observations" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_observations">
                         </td>
                     </tr>
 
                     {/foreach}
                 </table>
             </div>
-            <br>
-            <input type="submit" value="Enviar" class="btn btn-success">
+            <div>
+                <br>
+                <input type="submit" value="Enviar" class="btn btn-success">
+            </div>
         </form>
     </fieldset>
 {else}
     <h2>{l s='Ningún contacto para subir' mod='mtsalegraapi'}</h2>
 {/if}
+<br>
 <a class="btn btn-primary" href="{$backLink|escape:'htmlall':'UTF-8'}">Volver</a>
