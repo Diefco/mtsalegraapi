@@ -70,13 +70,13 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         $mtsQuery = new DbQuery();
         $mtsQuery->select('id_customer')
             ->from('customer')
-            ->leftJoin('mtsalegraapi_contacts',null,'ps_customer.id_customer = ps_mtsalegraapi_contacts.id_contact_store')
+            ->leftJoin('mtsalegraapi_contacts', null, 'ps_customer.id_customer = ps_mtsalegraapi_contacts.id_contact_store')
             ->where('ps_mtsalegraapi_contacts.id_contact_alegra is NULL');
         $mts_join = Db::getInstance()->executeS($mtsQuery);
 
         $customerBundle = array();
 
-        foreach ($mts_join as $key => $valueInfo){
+        foreach ($mts_join as $key => $valueInfo) {
             //  Requesting necessary customer information
             $customerInfoQuery = new DbQuery();
             $customerInfoQuery->select('id_customer, firstname, lastname, email, company, date_upd')
@@ -138,11 +138,9 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
                     'phone_mobile' => $this->uniqueDataArray($customer, 'address', 'phone_mobile'),
                 ));
             }
-
-
         }
 
-        for ($i = 0; $i < count($customersArray); $i++){
+        for ($i = 0; $i < count($customersArray); $i++) {
             $dniCompilation[$i] = array();
             for ($k = 0; $k < count($customersArray[$i]['addressData']); $k++){
                 $dniCompilation[$i][$k] = $customersArray[$i]['addressData'][$k]['dni'];
@@ -162,7 +160,8 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         $this->setTemplate('contacts/create.tpl');
     }
 
-    private function uniqueDataArray($array, $index, $subIndex) {
+    private function uniqueDataArray($array, $index, $subIndex)
+    {
         $arrayData = array();
         foreach ($array[$index] as $subArray) {
             if (count($subArray) > 0) {
@@ -172,7 +171,8 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         return $arrayData;
     }
 
-    private function joinInlineData($metaArray) {
+    private function joinInlineData($metaArray)
+    {
         $indexedArray = array();
         $arrayKeys = array();
         $condensed = array();
@@ -185,7 +185,7 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         $maxArray = max($indexedArray);
 
         for ($i = 0; $i < $maxArray; $i++) {
-            foreach ($arrayKeys as $value){
+            foreach ($arrayKeys as $value) {
                 $condensed[$i][$value] = $metaArray[$value][$i];
             }
         }
