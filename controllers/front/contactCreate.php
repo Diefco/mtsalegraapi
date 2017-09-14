@@ -72,38 +72,38 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
 
         $customerBundle = array();
 
-        foreach ($mts_join as $key => $value){
+        foreach ($mts_join as $key => $valueInfo){
             //  Requesting necessary customer information
             $customerInfoQuery = new DbQuery();
             $customerInfoQuery->select('id_customer, firstname, lastname, email, company, date_upd')
                               ->from('customer')
-                              ->where('id_customer='.$value['id_customer']);
+                              ->where('id_customer='.$valueInfo['id_customer']);
             $customerInfo = Db::getInstance()->executeS($customerInfoQuery);
 
             //  Requesting necessary customer address
             $customerAddressQuery = new DbQuery();
             $customerAddressQuery->select('dni, phone, phone_mobile, alias, company, address1, address2, city, id_country, id_state, date_upd')
                                  ->from('address')
-                                 ->where('id_customer='.$value['id_customer']);
+                                 ->where('id_customer='.$valueInfo['id_customer']);
             $customerAddress = Db::getInstance()->executeS($customerAddressQuery);
 
-            foreach ($customerAddress as $key => $value) {
+            foreach ($customerAddress as $keyAddress => $valueAddress) {
                 //  Requesting country of customer address
                 $countryAddressQuery = new DbQuery();
                 $countryAddressQuery->select('iso_code')
                                      ->from('country')
-                                     ->where('id_country='.$value['id_country']);
+                                     ->where('id_country='.$valueAddress['id_country']);
                 $countryAddress = Db::getInstance()->executeS($countryAddressQuery);
 
                 //  Requesting state of customer address
                 $stateAddressQuery = new DbQuery();
                 $stateAddressQuery->select('name')
                     ->from('state')
-                    ->where('id_state='.$value['id_state']);
+                    ->where('id_state='.$valueAddress['id_state']);
                 $stateAddress = Db::getInstance()->executeS($stateAddressQuery);
 
-                $customerAddress[$key]['iso_code_country'] = $countryAddress[0]['iso_code'];
-                $customerAddress[$key]['state_name'] = $stateAddress[0]['name'];
+                $customerAddress[$keyAddress]['iso_code_country'] = $countryAddress[0]['iso_code'];
+                $customerAddress[$keyAddress]['state_name'] = $stateAddress[0]['name'];
             }
 
             $customerInfo = array('info' => $customerInfo[0]);
@@ -113,13 +113,79 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
             $customerBundle[] = $customerInfo;
         }
 
-//        echo "<pre>";
-//        print_r($customerBundle);
-//        echo "</pre>";
-//        die();
+        $customersArray = array();
+        $dniCompilation = array();
 
-        $this->context->smarty->assign('customerBundle', $customerBundle);
+        foreach ($customerBundle as $key => $customer) {
+            $customersArray[$key] = array();
+            if (count($customer) > 0) {
+                $customersArray[$key]['id'] = $customer['info']['id_customer'];
+                $customersArray[$key]['name'] = $customer['info']['firstname'] . ' ' . $customer['info']['lastname'];
+                $customersArray[$key]['email'] = $customer['info']['email'];
+                $customersArray[$key]['addressData'] = $this->joinInlineData(array(
+                    'alias' => $this->uniqueDataArray($customer, 'address', 'alias'),
+                    'dni' => $this->uniqueDataArray($customer, 'address', 'dni'),
+                    'address1' => $this->uniqueDataArray($customer, 'address', 'address1'),
+                    'address2' => $this->uniqueDataArray($customer, 'address', 'address2'),
+                    'city' => $this->uniqueDataArray($customer, 'address', 'city'),
+                    'state' => $this->uniqueDataArray($customer, 'address', 'state_name'),
+                    'country' => $this->uniqueDataArray($customer, 'address', 'iso_code_country'),
+                    'phone' => $this->uniqueDataArray($customer, 'address', 'phone'),
+                    'phone_mobile' => $this->uniqueDataArray($customer, 'address', 'phone_mobile'),
+                ));
+            }
+
+
+        }
+
+        for ($i = 0; $i < count($customersArray); $i++){
+            $dniCompilation[$i] = array();
+            for ($k = 0; $k < count($customersArray[$i]['addressData']); $k++){
+                $dniCompilation[$i][$k] = $customersArray[$i]['addressData'][$k]['dni'];
+            }
+        }
+
+        foreach ($dniCompilation as $customerKey => $customer) {
+            if (count($customer) > 0 && count(array_unique($customer)) <= 1) {
+                $customersArray[$customerKey]['dniUnique'] = 'true';
+            } else {
+                $customersArray[$customerKey]['dniUnique'] = 'false';
+            }
+        }
+
+        $this->context->smarty->assign('customers', $customersArray);
         $this->context->smarty->assign('backLink', $this->context->link->getModuleLink('mtsalegraapi', 'home', array(), Configuration::get('PS_SSL_ENABLED')));
         $this->setTemplate('contacts/create.tpl');
+    }
+
+    private function uniqueDataArray($array, $index, $subIndex) {
+        $arrayData = array();
+        foreach ($array[$index] as $subArray) {
+            if (count($subArray) > 0) {
+                $arrayData[] = $subArray[$subIndex];
+            }
+        }
+        return $arrayData;
+    }
+
+    private function joinInlineData($metaArray) {
+        $indexedArray = array();
+        $arrayKeys = array();
+        $condensed = array();
+
+        foreach ($metaArray as $keyMeta => $valueMeta) {
+            $indexedArray[$keyMeta] = count($valueMeta);
+            $arrayKeys[] = $keyMeta;
+        }
+
+        $maxArray = max($indexedArray);
+
+        for ($i = 0; $i < $maxArray; $i++) {
+            foreach ($arrayKeys as $value){
+                $condensed[$i][$value] = $metaArray[$value][$i];
+            }
+        }
+
+        return $condensed;
     }
 }

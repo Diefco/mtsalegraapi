@@ -28,7 +28,8 @@
 *}
 
 <h1>{l s='Subir contactos' mod='mtsalegraapi'}</h1>
-{if isset($customerBundle) && !empty($customerBundle)}
+
+{if isset($customers) && !empty($customers)}
     <p>{l s='Seleccione los contactos que desea subir' mod='mtsalegraapi'}</p>
     <fieldset>
         <form action="" method="post" class="form-inline">
@@ -46,9 +47,6 @@
                         </th>
                         <th>
                             {l s='Email' mod='mtsalegraapi'}
-                        </th>
-                        <th>
-                            {l s='Eleja' mod='mtsalegraapi'}
                         </th>
                         <th>
                             {l s='Alias' mod='mtsalegraapi'}
@@ -69,70 +67,135 @@
                             {l s='Observaciones' mod='mtsalegraapi'}
                         </th>
                     </tr>
-                    {foreach from=$customerBundle item=customer}
-                        {if isset($customer.address) && !empty($customer.address)}
-                            {assign var="rowspan" value=$customer.address|@count}
+                    {foreach from=$customers item=customer}
+                        {if isset($customer.addressData) && !empty($customer.addressData)}
+                            {assign var="addressExist" value=true}
+                            {assign var="addressCount" value=$customer.addressData|@count}
                         {else}
-                            {assign var="rowspan" value=0}
+                            {assign var="addressExist" value=false}
+                            {assign var="addressCount" value=0}
                         {/if}
-                            <tr>
-                                <td rowspan="{$rowspan|escape:'htmlall':'UTF-8'}">
-                                    checkbox
-                                </td>
-                                <td rowspan="{$rowspan|escape:'htmlall':'UTF-8'}">
-                                    {$customer.info.firstname|escape:'htmlall':'UTF-8'} {$customer.info.lastname|escape:'htmlall':'UTF-8'}
-                                </td>
-                                <td rowspan="{$rowspan|escape:'htmlall':'UTF-8'}">
-                                    id
-                                </td>
-                                <td rowspan="{$rowspan|escape:'htmlall':'UTF-8'}">
-                                    {$customer.info.email|escape:'htmlall':'UTF-8'}
-                                </td>
-                        {assign var="counter" value=0}
-                        {if isset($customer.address) && !empty($customer.address)}
-                            {foreach from=$customer.address item=address}
-                                {if $counter != 0}
-                                    </tr>
-                                    <tr>
+
+                        {if isset($customer.id) && !empty($customer.id)}
+                            {assign var="idCustomer" value=$customer.id}
+                        {else}
+                            {assign var="idCustomer" value=''}
+                        {/if}
+                    <tr>
+                        <td>
+                            check button
+                        </td>
+                        <td>
+                            {if isset($customer.name) || isset($customer.name)}
+                                {$customer.name|escape:'htmlall':'UTF-8'}
+                            {else}
+                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_name">
+                            {/if}
+                        </td>
+                        <td>
+                            {if isset($customer.dniUnique) && $customer.dniUnique == true}
+                                {if $addressExist}
+                                    {$customer.addressData.0.dni|escape:'htmlall':'UTF-8'}
+                                {else}
+                                    <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_dni">
                                 {/if}
-                                    <td>
-                                        radio button
-                                    </td>
-                                    <td>
-                                        {if isset($address.alias) && !empty($address.alias)}
-                                            {$address.alias|escape:'htmlall':'UTF-8'}
-                                        {/if}
-                                    </td>
-                                    <td>
-                                        {if isset($address.phone) && !empty($address.phone)}
-                                            {$address.phone|escape:'htmlall':'UTF-8'}
-                                        {/if}
-                                    </td>
-                                    <td>
-                                        {if isset($address.phone_mobile) && !empty($address.phone_mobile)}
-                                            {$address.phone_mobile|escape:'htmlall':'UTF-8'}
-                                        {/if}
-                                    </td>
-                                    <td>
-                                        {if isset($address.address1) && !empty($address.address1) || isset($address.address2) && !empty($address.address2)}
-                                            {$address.address1|escape:'htmlall':'UTF-8'}
-                                            {if isset($address.address2) && !empty($address.address2)}
-                                                , {$address.address2|escape:'htmlall':'UTF-8'}
-                                            {/if}
-                                        {/if}
-                                    </td>
-                                    <td>
-                                        {if isset($address.city) && !empty($address.city)}
-                                            {$address.city|escape:'htmlall':'UTF-8'}, {$address.state_name|escape:'htmlall':'UTF-8'}, {$address.iso_code_country|escape:'htmlall':'UTF-8'}
-                                        {/if}
-                                    </td>
-                                    <td >
-                                        Holi
-                                    </td>
-                                </tr>
-                                {assign var="counter" value=1}
-                            {/foreach}
-                        {/if}
+                            {elseif $addressExist}
+                                <select>
+                                    {*{foreach from=$customer.addressData item=address}*}
+                                        {for $counter=0 to {$customer.addressData|@count}-1}
+                                            <option value="{$customer.addressData.$counter.dni}">{$customer.addressData.$counter.dni}</option>
+                                        {/for}
+                                    {*{/foreach}*}
+                                </select>
+                            {/if}
+                        </td>
+                        <td>
+                            {$customer.email}
+                        </td>
+                        <td>
+                            {if $addressExist && $addressExist}
+                                {if {$customer.addressData|@count} > 1}
+                                    <select>
+                                        {for $counter=0 to {$customer.addressData|@count}-1}
+                                            <option value="{$customer.addressData.{$counter}.alias}">{$customer.addressData.{$counter}.alias}</option>
+                                        {/for}
+                                    </select>
+                                {else}
+                                    {$customer.addressData.0.alias}
+                                {/if}
+                            {else}
+                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_alias">
+                            {/if}
+                        </td>
+                        <td>
+                            {if $addressExist}
+                                {if {$customer.addressData|@count} > 1}
+                                    <select>
+                                        {for $counter=0 to {$customer.addressData|@count}-1}
+                                            <option value="{$customer.addressData.{$counter}.phone}">{$customer.addressData.{$counter}.phone}</option>
+                                        {/for}
+                                    </select>
+                                {else}
+                                    {$customer.addressData.0.phone}
+                                {/if}
+                            {else}
+                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone">
+                            {/if}
+                        </td>
+                        <td>
+                            {if $addressExist}
+                                {if {$customer.addressData|@count} > 1}
+                                    <select>
+                                        {for $counter=0 to {$customer.addressData|@count}-1}
+                                            <option value="{$customer.addressData.{$counter}.phone_mobile}">{$customer.addressData.{$counter}.phone_mobile}</option>
+                                        {/for}
+                                    </select>
+                                {else}
+                                    {$customer.addressData.0.phone_mobile}
+                                {/if}
+                            {else}
+                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone_mobile">
+                            {/if}
+                        </td>
+                        <td>
+                            {if isset($customer.addressData) && !empty($customer.addressData)}
+                                {if {$customer.addressData|@count} > 1}
+                                    <select>
+                                        {for $counter=0 to {$customer.addressData|@count}-1}
+                                            <option value="{$customer.addressData.{$counter}.address1}">{$customer.addressData.{$counter}.address1}</option>
+                                        {/for}
+                                    </select>
+                                {else}
+                                    {$customer.addressData.0.address1}
+                                    {if isset($customer.addressData.0.address2) && !empty($customer.addressData.0.address2)}
+                                        , {$customer.addressData.0.address2}
+
+                                    {/if}
+                                {/if}
+                            {else}
+                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_address">
+                            {/if}
+                        </td>
+                        <td>
+                            {if $addressExist}
+                                {if {$customer.addressData|@count} > 1}
+                                    <select>
+                                        {for $counter=0 to {$customer.addressData|@count}-1}
+                                            <option value="{$customer.addressData.{$counter}.city}/{$customer.addressData.{$counter}.state}/{$customer.addressData.{$counter}.country}">{$customer.addressData.{$counter}.city}/{$customer.addressData.{$counter}.state}/{$customer.addressData.{$counter}.country}</option>
+                                        {/for}
+                                    </select>
+                                {else}
+                                    {$customer.addressData.0.city}/{$customer.addressData.0.state}/{$customer.addressData.0.country}
+                                {/if}
+                            {else}
+                                <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_location">
+                            {/if}
+                        </td>
+                        <td>
+                            <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_observations">
+                        </td>
+                    </tr>
+
                     {/foreach}
                 </table>
             </div>
@@ -140,9 +203,6 @@
             <input type="submit" value="Enviar" class="btn btn-success">
         </form>
     </fieldset>
-    <pre>
-        {$customerBundle|@print_r}
-    </pre>
 {else}
     <h2>{l s='Ningún contacto para subir' mod='mtsalegraapi'}</h2>
 {/if}
