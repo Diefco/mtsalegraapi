@@ -75,7 +75,7 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         foreach ($mts_join as $key => $value){
             //  Requesting necessary customer information
             $customerInfoQuery = new DbQuery();
-            $customerInfoQuery->select('firstname, lastname, email, company, date_upd')
+            $customerInfoQuery->select('id_customer, firstname, lastname, email, company, date_upd')
                               ->from('customer')
                               ->where('id_customer='.$value['id_customer']);
             $customerInfo = Db::getInstance()->executeS($customerInfoQuery);
