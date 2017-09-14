@@ -44,6 +44,10 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
             Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED')));
         }
 
+        echo "<pre>";
+        print_r(Tools::getAllValues());
+        echo "</pre>";
+
         $storeSql = new DbQuery();
         $storeSql->select('id_customer, firstname, lastname, email')
                  ->from('customer');
