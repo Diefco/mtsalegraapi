@@ -29,7 +29,7 @@
 
 {*TODO Fix to show up by default this info when the module is installed/reinstalled*}
 
-<div class="panel" style="{$displayTooltip|escape:'htmlall':'UTF-8'}">
+<div class="panel" style="{if isset($displayTooltip) && $displayTooltip == 'true'}display: none;{/if}">
 	<h3><i class="icon icon-line-chart"></i> {l s='Metasysco.com - Facturación electrónica a través de Alegra' mod='mtsalegraapi'}</h3>
 	<p>
 		<strong>{l s='Módulo para la gestión administrativa de facturas, productos y clientes.' mod='mtsalegraapi'}</strong><br />
@@ -49,7 +49,7 @@
 	</p>
 </div>
 
-<div class="panel" style="{$displayTooltip|escape:'htmlall':'UTF-8'}">
+<div class="panel" style="{if isset($displayTooltip) && $displayTooltip == 'true'}display: none;{/if}">
 	<h3><i class="icon icon-tags"></i> {l s='Para tener en cuenta' mod='mtsalegraapi'}</h3>
 	<p>
 		&raquo; {l s='Estas son algunas de las recomendaciones que hacemos para el correcto uso del módulo' mod='mtsalegraapi'} :
