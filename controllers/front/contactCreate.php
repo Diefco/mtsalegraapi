@@ -142,7 +142,7 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
 
         for ($i = 0; $i < count($customersArray); $i++) {
             $dniCompilation[$i] = array();
-            for ($k = 0; $k < count($customersArray[$i]['addressData']); $k++){
+            for ($k = 0; $k < count($customersArray[$i]['addressData']); $k++) {
                 $dniCompilation[$i][$k] = $customersArray[$i]['addressData'][$k]['dni'];
             }
         }
