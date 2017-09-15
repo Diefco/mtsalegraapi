@@ -70,8 +70,8 @@ class Mtsalegraapi extends Module
         Configuration::updateValue('mts_AlgApi_Tooltips', 'false');
         Configuration::updateValue('mts_AlgApi_User', '');
         Configuration::updateValue('mts_AlgApi_Password', '');
-//        Configuration::updateValue('mts_AlgApi_Email', '');
-//        Configuration::updateValue('mts_AlgApi_Token', '');
+        Configuration::updateValue('mts_AlgApi_Email', '');
+        Configuration::updateValue('mts_AlgApi_Token', '');
         Configuration::updateValue('mts_AlgApi_limitQuery', '5');
 
         include(dirname(__FILE__).'/sql/install.php');
@@ -86,8 +86,8 @@ class Mtsalegraapi extends Module
         Configuration::deleteByName('mts_AlgApi_Tooltips');
         Configuration::deleteByName('mts_AlgApi_User');
         Configuration::deleteByName('mts_AlgApi_Password');
-//        Configuration::deleteByName('mts_AlgApi_Email');
-//        Configuration::deleteByName('mts_AlgApi_Token');
+        Configuration::deleteByName('mts_AlgApi_Email');
+        Configuration::deleteByName('mts_AlgApi_Token');
         Configuration::deleteByName('mts_AlgApi_limitQuery');
 
         include(dirname(__FILE__).'/sql/uninstall.php');
@@ -381,9 +381,9 @@ class Mtsalegraapi extends Module
                 'mts_AlgApi_Tooltips',
                 'mts_AlgApi_User',
                 'mts_AlgApi_Password',
+                'mts_AlgApi_limitQuery',
                 'mts_AlgApi_Email',
                 'mts_AlgApi_Token',
-                'mts_AlgApi_limitQuery'
             )
         );
 
