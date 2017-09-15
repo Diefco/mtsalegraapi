@@ -35,8 +35,8 @@
         <a href="{$urlArray.productConsultOne|escape:'htmlall':'UTF-8'}" class="btn btn-success">{l s='Consultar un producto' mod='mtsalegraapi'}</a>
         <a href="{$urlArray.productConsultMultiple|escape:'htmlall':'UTF-8'}" class="btn btn-success">{l s='Consultar varios productos' mod='mtsalegraapi'}</a>
         <a href="{$urlArray.productCreate|escape:'htmlall':'UTF-8'}" class="btn btn-primary">{l s='Crear productos' mod='mtsalegraapi'}</a>
-        <a href="{$urlArray.productEdit|escape:'htmlall':'UTF-8'}" class="btn btn-warning">{l s='Editar productos' mod='mtsalegraapi'}</a>
-        <a href="{$urlArray.productDelete|escape:'htmlall':'UTF-8'}" class="btn btn-danger">{l s='Eliminar productos' mod='mtsalegraapi'}</a>
+        {*<a href="{$urlArray.productEdit|escape:'htmlall':'UTF-8'}" class="btn btn-warning">{l s='Editar productos' mod='mtsalegraapi'}</a>*}
+        {*<a href="{$urlArray.productDelete|escape:'htmlall':'UTF-8'}" class="btn btn-danger">{l s='Eliminar productos' mod='mtsalegraapi'}</a>*}
     </div>
 
     <div class="btn-group-vertical col-md-3" role="group">
@@ -44,8 +44,8 @@
         <a href="{$urlArray.contactConsultOne|escape:'htmlall':'UTF-8'}" class="btn btn-success">{l s='Consultar un cliente' mod='mtsalegraapi'}</a>
         <a href="{$urlArray.contactConsultMultiple|escape:'htmlall':'UTF-8'}" class="btn btn-success">{l s='Consultar varios clientes' mod='mtsalegraapi'}</a>
         <a href="{$urlArray.contactCreate|escape:'htmlall':'UTF-8'}" class="btn btn-primary">{l s='Crear clientes' mod='mtsalegraapi'}</a>
-        <a href="{$urlArray.contactEdit|escape:'htmlall':'UTF-8'}" class="btn btn-warning">{l s='Editar clientes' mod='mtsalegraapi'}</a>
-        <a href="{$urlArray.contactDelete|escape:'htmlall':'UTF-8'}" class="btn btn-danger">{l s='Eliminar clientes' mod='mtsalegraapi'}</a>
+        {*<a href="{$urlArray.contactEdit|escape:'htmlall':'UTF-8'}" class="btn btn-warning">{l s='Editar clientes' mod='mtsalegraapi'}</a>*}
+        {*<a href="{$urlArray.contactDelete|escape:'htmlall':'UTF-8'}" class="btn btn-danger">{l s='Eliminar clientes' mod='mtsalegraapi'}</a>*}
     </div>
 
     <div class="btn-group-vertical col-md-3" role="group">
@@ -53,8 +53,8 @@
         <a href="{$urlArray.invoiceConsultOne|escape:'htmlall':'UTF-8'}" class="btn btn-success">{l s='Consultar una factura' mod='mtsalegraapi'}</a>
         <a href="{$urlArray.invoiceConsultMultiple|escape:'htmlall':'UTF-8'}" class="btn btn-success">{l s='Consultar varias facturas' mod='mtsalegraapi'}</a>
         <a href="{$urlArray.invoiceCreate|escape:'htmlall':'UTF-8'}" class="btn btn-primary">{l s='Crear facturas' mod='mtsalegraapi'}</a>
-        <a href="{$urlArray.invoiceEdit|escape:'htmlall':'UTF-8'}" class="btn btn-warning">{l s='Editar facturas' mod='mtsalegraapi'}</a>
-        <a href="{$urlArray.invoiceDelete|escape:'htmlall':'UTF-8'}" class="btn btn-danger">{l s='Eliminar facturas' mod='mtsalegraapi'}</a>
+        {*<a href="{$urlArray.invoiceEdit|escape:'htmlall':'UTF-8'}" class="btn btn-warning">{l s='Editar facturas' mod='mtsalegraapi'}</a>*}
+        {*<a href="{$urlArray.invoiceDelete|escape:'htmlall':'UTF-8'}" class="btn btn-danger">{l s='Eliminar facturas' mod='mtsalegraapi'}</a>*}
     </div>
     <div class="col-md-2"></div>
 </div>
