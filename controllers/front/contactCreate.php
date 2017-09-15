@@ -84,14 +84,17 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         $mtsQuery->select('id_customer')
             ->from('customer')
             ->leftJoin('mtsalegraapi_contacts', null, 'ps_customer.id_customer = ps_mtsalegraapi_contacts.id_contact_store')
-            ->where('ps_mtsalegraapi_contacts.id_contact_alegra is NULL')
-            ->limit('10')
+            ->where('ps_mtsalegraapi_contacts.id_contact_alegra is NULL || ps_mtsalegraapi_contacts.contact_ignored is NULL ')
+            ->limit($limitQuery)
             ->orderBy('id_customer');
         $mts_join = Db::getInstance()->executeS($mtsQuery);
 
         $customerBundle = array();
+        $idCustomersList = array();
 
         foreach ($mts_join as $key => $valueInfo) {
+
+            $idCustomersList[] = $valueInfo['id_customer'];
             //  Requesting necessary customer information
             $customerInfoQuery = new DbQuery();
             $customerInfoQuery->select('id_customer, firstname, lastname, email, company, date_upd')
@@ -170,12 +173,103 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
             }
         }
 
-        echo "<pre>";
-        print_r(Tools::getAllValues());
-        echo "</pre>";
+        $customerList = $idCustomersList;
 
+        for($i = 0; $i < count($idCustomersList); $i++) {
+            if (Tools::getIsset('customer_'.$idCustomersList[$i].'_check')) {
+                $confirmValues = array();
+                if (!Tools::getIsset('contact_'.$idCustomersList[$i].'_name') || Tools::getValue('contact_'.$idCustomersList[$i].'_name') === false || Tools::getValue('contact_'.$idCustomersList[$i].'_name') == null) {
+                    $confirmValues[] = 'name';
+                }
 
+                if (!Tools::getIsset('contact_'.$idCustomersList[$i].'_email') || Tools::getValue('contact_'.$idCustomersList[$i].'_email') === false || Tools::getValue('contact_'.$idCustomersList[$i].'_email') == null) {
+                    $confirmValues[] = 'email';
+                }
 
+                if (!Tools::getIsset('contact_'.$idCustomersList[$i].'_alias') || Tools::getValue('contact_'.$idCustomersList[$i].'_alias') === false || Tools::getValue('contact_'.$idCustomersList[$i].'_alias') == null) {
+                    $confirmValues[] = 'alias';
+                }
+
+                if (!Tools::getIsset('contact_'.$idCustomersList[$i].'_dni') || Tools::getValue('contact_'.$idCustomersList[$i].'_dni') === false || Tools::getValue('contact_'.$idCustomersList[$i].'_dni') == null) {
+                    $confirmValues[] = 'dni';
+                }
+
+                if (!Tools::getIsset('contact_'.$idCustomersList[$i].'_phone') || Tools::getValue('contact_'.$idCustomersList[$i].'_phone') === false || Tools::getValue('contact_'.$idCustomersList[$i].'_phone') == null) {
+                    $confirmValues[] = 'phone';
+                }
+
+                if (!Tools::getIsset('contact_'.$idCustomersList[$i].'_phone_mobile') || Tools::getValue('contact_'.$idCustomersList[$i].'_phone_mobile') === false || Tools::getValue('contact_'.$idCustomersList[$i].'_phone_mobile') == null) {
+                    $confirmValues[] = 'phone_mobile';
+                }
+
+                if (!Tools::getIsset('contact_'.$idCustomersList[$i].'_address') || Tools::getValue('contact_'.$idCustomersList[$i].'_address') === false || Tools::getValue('contact_'.$idCustomersList[$i].'_address') == null) {
+                    $confirmValues[] = 'address';
+                }
+
+                if (!Tools::getIsset('contact_'.$idCustomersList[$i].'_location') || Tools::getValue('contact_'.$idCustomersList[$i].'_location') === false || Tools::getValue('contact_'.$idCustomersList[$i].'_location') == null) {
+                    $confirmValues[] = 'location';
+                }
+
+                if (count($confirmValues == 0)) {
+                    $indexArray = array_search($idCustomersList[$i], $customerList);
+
+                    if (Tools::getIsset('contact_'.$idCustomersList[$i].'_list')) {
+                        $dniDataRequest = $customersArray[$indexArray]['addressData'][Tools::getValue('contact_' . $idCustomersList[$i] . '_dni')]['dni'];
+                        $phonePrimaryDataRequest = $customersArray[$indexArray]['addressData'][Tools::getValue('contact_' . $idCustomersList[$i] . '_phone')]['phone'];
+                        $phoneSecondaryDataRequest = $customersArray[$indexArray]['addressData'][Tools::getValue('contact_' . $idCustomersList[$i] . '_phone_mobile')]['phone_mobile'];
+
+                        $addressDataRequest = $customersArray[$indexArray]['addressData'][Tools::getValue('contact_' . $idCustomersList[$i] . '_address')]['address1'];
+                        if (!empty($customersArray[$indexArray]['addressData'][Tools::getValue('contact_' . $idCustomersList[$i] . '_address')]['address2'])) {
+                            $addressDataRequest .= ', ' . $customersArray[$indexArray]['addressData'][Tools::getValue('contact_' . $idCustomersList[$i] . '_address')]['address2'];
+                        }
+
+                        $locationDataRequest = $customersArray[$indexArray]['addressData'][Tools::getValue('contact_' . $idCustomersList[$i] . '_location')]['city'];
+                        if (!empty($customersArray[$indexArray]['addressData'][Tools::getValue('contact_' . $idCustomersList[$i] . '_address')]['state'])) {
+                            $locationDataRequest .= ' / ' . $customersArray[$indexArray]['addressData'][Tools::getValue('contact_' . $idCustomersList[$i] . '_address')]['state'];
+                        }
+
+                        if (!empty($customersArray[$indexArray]['addressData'][Tools::getValue('contact_' . $idCustomersList[$i] . '_address')]['country'])) {
+                            $locationDataRequest .= ' / ' . $customersArray[$indexArray]['addressData'][Tools::getValue('contact_' . $idCustomersList[$i] . '_address')]['country'];
+                        }
+
+                        $apiRequest = array(
+                            'name' => $customersArray[$indexArray]['name'],
+                            'identification' => $dniDataRequest,
+                            'email' => Tools::getValue('contact_' . $idCustomersList[$i] . '_email'),
+                            'phonePrimary' => $phonePrimaryDataRequest,
+                            'phoneSecondary' => $phoneSecondaryDataRequest,
+                            'type' => array('client'),
+                            'address' => array(
+                                'address' => $addressDataRequest,
+                                'city' => $locationDataRequest
+                            )
+                        );
+                    } else {
+                        $apiRequest = array(
+                            'name' => Tools::getValue('contact_' . $idCustomersList[$i] . '_name'),
+                            'identification' => Tools::getValue('contact_' . $idCustomersList[$i] . '_dni'),
+                            'email' => Tools::getValue('contact_' . $idCustomersList[$i] . '_email'),
+                            'phonePrimary' => Tools::getValue('contact_' . $idCustomersList[$i] . '_phone'),
+                            'phoneSecondary' => Tools::getValue('contact_' . $idCustomersList[$i] . '_phone_mobile'),
+                            'type' => array('client'),
+                            'address' => array(
+                                'address' => Tools::getValue('contact_' . $idCustomersList[$i] . '_address'),
+                                'city' => Tools::getValue('contact_' . $idCustomersList[$i] . '_location')
+                            )
+                        );
+                    }
+                    $jsonApiRequest = json_encode($apiRequest);
+
+                    $sentInfo = $this->sendToApi($authToken, $jsonApiRequest, $customersArray[$indexArray]);
+                }
+            }
+        }
+
+        if (!empty($sentInfo) && $sentInfo) {
+            Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'contactCreate', array(), Configuration::get('PS_SSL_ENABLED')));
+        }
+
+//        $this->context->smarty->assign('sentInfo', $sentInfo);
         $this->context->smarty->assign('customers', $customersArray);
         $this->context->smarty->assign('backLink', $this->context->link->getModuleLink('mtsalegraapi', 'home', array(), Configuration::get('PS_SSL_ENABLED')));
         $this->setTemplate('contacts/create.tpl');
@@ -212,5 +306,38 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         }
 
         return $condensed;
+    }
+
+    private function sendToApi($authToken, $jsonApiRequest, $customersArray) {
+        $url = 'https://app.alegra.com/api/v1/contacts/';
+        $headers = array(
+            'Accept: application/json',
+            'Content-Type: application/json; charset=utf-8',
+            'Authorization: Basic ' . $authToken
+        );
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonApiRequest);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $jsonRequest = curl_exec($ch);
+        $contact = json_decode($jsonRequest, true);
+
+        if (!array_key_exists('code', $contact) && !array_key_exists('error', $contact)) {
+            Db::getInstance()->insert('mtsalegraapi_contacts', array(
+                'id_contact_store' => $customersArray['id'],
+                'id_contact_alegra' => $contact['id'],
+                'contact_ignored' => false,
+                'dni' => $contact['identification'],
+                'observations' => $contact['observations'],
+            ));
+
+            return true;
+        } else {
+            return false;
+        }
     }
 }
