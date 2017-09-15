@@ -129,11 +129,15 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
 
         foreach ($taxesAlegraArray as $alegraIndex => $alegraTax) {
             foreach ($taxesStoreArray as $storeIndex => $storeTax) {
+                $storeTaxRate = filter_var($storeTax['rate'], FILTER_VALIDATE_FLOAT);
+                $alegraTaxRate = filter_var($alegraTax['percentage'], FILTER_VALIDATE_FLOAT);
                 if (stristr($storeTax['name'], $alegraTax['name']) !== false &&
-                    (float)$storeTax['rate'] == (float)$alegraTax['percentage']) {
+                    $storeTaxRate == $alegraTaxRate) {
                     $relatedTaxes[] = array(
                         'id_tax_alegra' => $alegraTax['id'],
                         'id_tax_store' => $storeTax['id_tax'],
+                        'tax_value' => $storeTaxRate,
+                        'tax_name' => $alegraTax['name'],
                     );
                 }
             }
@@ -149,7 +153,12 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                     'unitCost' => null,
                     'initialQuantity' => null,
                 ),
-                'tax' => null,
+                'tax' => array(
+                    'alegra' => null,
+                    'store' => null,
+                    'value' => null,
+                    'name' => null,
+                ),
                 'price' => null
             );
             // Get the short description for each product
@@ -198,7 +207,10 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
             if (!$taxException) {
                 foreach ($relatedTaxes as $indexRelatedTax => $relatedTax) {
                     if ($taxRulesArray[0]['id_tax'] == $relatedTax['id_tax_store']) {
-                        $productsArray[$product['id_product']]['tax'] = filter_var($relatedTax['id_tax_alegra'], FILTER_VALIDATE_INT);
+                        $productsArray[$product['id_product']]['tax']['alegra'] = filter_var($relatedTax['id_tax_alegra'], FILTER_VALIDATE_INT);
+                        $productsArray[$product['id_product']]['tax']['store'] = filter_var($relatedTax['id_tax_store'], FILTER_VALIDATE_INT);
+                        $productsArray[$product['id_product']]['tax']['value'] = filter_var($relatedTax['tax_value'], FILTER_VALIDATE_INT);
+                        $productsArray[$product['id_product']]['tax']['name'] = $relatedTax['tax_name'];
                     }
                 }
             }
@@ -208,9 +220,9 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
 
         $postValues = Tools::getAllValues();
 
-        $sentInfo = $this->sendToApi($authToken, 'items', 'post', $postValues);
+//        $sentInfo = $this->sendToApi($authToken, 'items', 'post', $postValues);
 
-        $this->context->smarty->assign('customers', $productsArray);
+        $this->context->smarty->assign('products', $productsArray);
         $this->context->smarty->assign('backLink', $this->context->link->getModuleLink('mtsalegraapi', 'home', array(), Configuration::get('PS_SSL_ENABLED')));
         $this->setTemplate('products/create.tpl');
     }
