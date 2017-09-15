@@ -27,9 +27,23 @@
  * @version 1.1.0
  */
 $(document).ready(function() {
-	$('#left_column').hide();
+	$('#left_column').remove();
     $('#center_column').removeClass('col-sm-9').addClass('col-sm-12');
-    console.log('Módulo de Alegra API by Metasysco.com');
+
+    /**
+     * contactCreate - create.tpl
+     */
+    var listFields = ['dni', 'alias', 'phone', 'phone_mobile', 'address', 'location'];
+
+    $('.selectorProfile').change(function(){
+        var selector = '#'.concat($(this).attr('id'));
+        var header = selector.replace('_option', '_');
+
+        listFields.forEach(function (item, index){
+            var completeID = header.concat(item);
+            $(completeID).val($(selector).val());
+        });
+    });
 });
 
 
