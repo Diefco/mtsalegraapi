@@ -93,7 +93,6 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         $idCustomersList = array();
 
         foreach ($mts_join as $key => $valueInfo) {
-
             $idCustomersList[] = $valueInfo['id_customer'];
             //  Requesting necessary customer information
             $customerInfoQuery = new DbQuery();
@@ -175,7 +174,7 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
 
         $customerList = $idCustomersList;
 
-        for($i = 0; $i < count($idCustomersList); $i++) {
+        for ($i = 0; $i < count($idCustomersList); $i++) {
             if (Tools::getIsset('customer_'.$idCustomersList[$i].'_check')) {
                 $confirmValues = array();
                 if (!Tools::getIsset('contact_'.$idCustomersList[$i].'_name') || Tools::getValue('contact_'.$idCustomersList[$i].'_name') === false || Tools::getValue('contact_'.$idCustomersList[$i].'_name') == null) {
@@ -308,7 +307,8 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         return $condensed;
     }
 
-    private function sendToApi($authToken, $jsonApiRequest, $customersArray) {
+    private function sendToApi($authToken, $jsonApiRequest, $customersArray)
+    {
         $url = 'https://app.alegra.com/api/v1/contacts/';
         $headers = array(
             'Accept: application/json',
