@@ -43,6 +43,9 @@
                             {l s='Nombre' mod='mtsalegraapi'}
                         </th>
                         <th>
+                            {l s='Opción' mod='mtsalegraapi'}
+                        </th>
+                        <th>
                             {l s='Identificación' mod='mtsalegraapi'}
                         </th>
                         <th>
@@ -88,14 +91,35 @@
                         <td>
                             {if isset($customer.name) || isset($customer.name)}
                                 {$customer.name|escape:'htmlall':'UTF-8'}
+                                <input type="hidden" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_name" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_name" value="{$customer.name|escape:'htmlall':'UTF-8'}">
                             {else}
                                 <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_name" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_name">
+                            {/if}
+                        </td>
+                        <td>
+                            {if $addressExist && $addressExist}
+                                {if {$customer.addressData|@count} > 1}
+                                    <input type="hidden" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_list" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_list" value="selector">
+                                    <select id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_option"  class="selectorProfile" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_option">
+                                        <option value="">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
+                                        {for $counter=0 to {$customer.addressData|@count}-1}
+                                            <option value="{$counter|escape:'htmlall':'UTF-8'}">{$counter+1|escape:'htmlall':'UTF-8'}</option>
+                                        {/for}
+                                    </select>
+                                {else}
+                                    1
+                                    <input type="hidden" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_option" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_option" value="0">
+                                {/if}
+                            {else}
+                                1
+                                <input type="hidden" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_option" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_option" value="0">
                             {/if}
                         </td>
                         <td>
                             {if isset($customer.dniUnique) && $customer.dniUnique == true}
                                 {if $addressExist}
                                     {$customer.addressData.0.dni|escape:'htmlall':'UTF-8'}
+                                    <input type="hidden" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_dni" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_dni" value="{$customer.addressData.0.dni|escape:'htmlall':'UTF-8'}">
                                 {else}
                                     <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_dni" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_dni">
                                 {/if}
@@ -112,18 +136,20 @@
                         </td>
                         <td>
                             {$customer.email|escape:'htmlall':'UTF-8'}
+                            <input type="hidden" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_email" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_email" value="{$customer.email|escape:'htmlall':'UTF-8'}">
                         </td>
                         <td>
                             {if $addressExist && $addressExist}
                                 {if {$customer.addressData|@count} > 1}
-                                    <select id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_dni" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_dni">
-                                        <option value="0">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
+                                    <select id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_alias" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_alias">
+                                        <option value="">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
                                         {for $counter=0 to {$customer.addressData|@count}-1}
                                             <option value="{$counter|escape:'htmlall':'UTF-8'}">{$customer.addressData.{$counter}.alias}</option>
                                         {/for}
                                     </select>
                                 {else}
                                     {$customer.addressData.0.alias|escape:'htmlall':'UTF-8'}
+                                    <input type="hidden" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_alias" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_alias" value="{$customer.addressData.0.alias|escape:'htmlall':'UTF-8'}">
                                 {/if}
                             {else}
                                 <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_alias" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_alias">
@@ -133,13 +159,14 @@
                             {if $addressExist}
                                 {if {$customer.addressData|@count} > 1}
                                     <select id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone">
-                                        <option value="0">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
+                                        <option value="">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
                                         {for $counter=0 to {$customer.addressData|@count}-1}
                                             <option value="{$counter|escape:'htmlall':'UTF-8'}">{$customer.addressData.{$counter}.phone}</option>
                                         {/for}
                                     </select>
                                 {else}
                                     {$customer.addressData.0.phone|escape:'htmlall':'UTF-8'}
+                                    <input type="hidden" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone" value="{$customer.addressData.0.phone|escape:'htmlall':'UTF-8'}">
                                 {/if}
                             {else}
                                 <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone">
@@ -149,13 +176,15 @@
                             {if $addressExist}
                                 {if {$customer.addressData|@count} > 1}
                                     <select id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone_mobile" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone_mobile">
-                                        <option value="0">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
+                                        <option value="">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
                                         {for $counter=0 to {$customer.addressData|@count}-1}
                                             <option value="{$counter|escape:'htmlall':'UTF-8'}">{$customer.addressData.{$counter}.phone_mobile}</option>
                                         {/for}
                                     </select>
                                 {else}
                                     {$customer.addressData.0.phone_mobile|escape:'htmlall':'UTF-8'}
+                                    <input type="hidden" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone_mobile" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone_mobile" value="{$customer.addressData.0.phone|escape:'htmlall':'UTF-8'}">
+
                                 {/if}
                             {else}
                                 <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone_mobile" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_phone_mobile">
@@ -165,7 +194,7 @@
                             {if $addressExist}
                                 {if {$customer.addressData|@count} > 1}
                                     <select id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_address" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_address">
-                                        <option value="0">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
+                                        <option value="">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
                                         {for $counter=0 to {$customer.addressData|@count}-1}
                                             <option value="{$counter|escape:'htmlall':'UTF-8'}">{$customer.addressData.{$counter}.address1|escape:'htmlall':'UTF-8'}
                                                 {if isset($customer.addressData.0.address2) && !empty($customer.addressData.0.address2)}
@@ -179,6 +208,7 @@
                                     {if isset($customer.addressData.0.address2) && !empty($customer.addressData.0.address2)}
                                         , {$customer.addressData.0.address2|escape:'htmlall':'UTF-8'}
                                     {/if}
+                                    <input type="hidden" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_address" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_address" value="{$customer.addressData.0.address1|escape:'htmlall':'UTF-8'}{if isset($customer.addressData.0.address2) && !empty($customer.addressData.0.address2)}, {$customer.addressData.0.address2|escape:'htmlall':'UTF-8'}{/if}">
                                 {/if}
                             {else}
                                 <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_address" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_address">
@@ -188,13 +218,14 @@
                             {if $addressExist}
                                 {if {$customer.addressData|@count} > 1}
                                     <select id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_location" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_location">
-                                        <option value="0">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
+                                        <option value="">{l s='Seleccione una opción' mod='mtsalegraapi'}</option>
                                         {for $counter=0 to {$customer.addressData|@count}-1}
                                             <option value="{$counter|escape:'htmlall':'UTF-8'}">{$customer.addressData.{$counter}.city|escape:'htmlall':'UTF-8'}/{$customer.addressData.{$counter}.state|escape:'htmlall':'UTF-8'}/{$customer.addressData.{$counter}.country|escape:'htmlall':'UTF-8'}</option>
                                         {/for}
                                     </select>
                                 {else}
                                     {$customer.addressData.0.city|escape:'htmlall':'UTF-8'}/{$customer.addressData.0.state|escape:'htmlall':'UTF-8'}/{$customer.addressData.0.country|escape:'htmlall':'UTF-8'}
+                                    <input type="hidden" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_location" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_location" value="{$customer.addressData.0.city|escape:'htmlall':'UTF-8'}/{$customer.addressData.0.state|escape:'htmlall':'UTF-8'}/{$customer.addressData.0.country|escape:'htmlall':'UTF-8'}">
                                 {/if}
                             {else}
                                 <input type="text" id="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_location" name="contact_{$idCustomer|escape:'htmlall':'UTF-8'}_location">
