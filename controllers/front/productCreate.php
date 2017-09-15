@@ -189,20 +189,20 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                 $taxException = false;
             }
 
-            $productsArray[$product['id_product']]['name'] = filter_var(strip_tags($descriptionArray[0]['name']),FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES);
-            $productsArray[$product['id_product']]['description'] = filter_var(strip_tags($descriptionArray[0]['description_short']),FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES);
-            $productsArray[$product['id_product']]['reference'] = filter_var(strip_tags($mts_join[$indexProduct]['reference']),FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES);
-            $productsArray[$product['id_product']]['inventory']['unitCost'] = filter_var($priceArray[0]['wholesale_price'],FILTER_VALIDATE_FLOAT);
-            $productsArray[$product['id_product']]['inventory']['initialQuantity'] = filter_var($quantityArray[0]['quantity'],FILTER_VALIDATE_INT);
+            $productsArray[$product['id_product']]['name'] = filter_var(strip_tags($descriptionArray[0]['name']), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES);
+            $productsArray[$product['id_product']]['description'] = filter_var(strip_tags($descriptionArray[0]['description_short']), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES);
+            $productsArray[$product['id_product']]['reference'] = filter_var(strip_tags($mts_join[$indexProduct]['reference']), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES);
+            $productsArray[$product['id_product']]['inventory']['unitCost'] = filter_var($priceArray[0]['wholesale_price'], FILTER_VALIDATE_FLOAT);
+            $productsArray[$product['id_product']]['inventory']['initialQuantity'] = filter_var($quantityArray[0]['quantity'], FILTER_VALIDATE_INT);
 
             if (!$taxException) {
                 foreach ($relatedTaxes as $indexRelatedTax => $relatedTax) {
                     if ($taxRulesArray[0]['id_tax'] == $relatedTax['id_tax_store']) {
-                        $productsArray[$product['id_product']]['tax'] = filter_var($relatedTax['id_tax_alegra'],FILTER_VALIDATE_INT);
+                        $productsArray[$product['id_product']]['tax'] = filter_var($relatedTax['id_tax_alegra'], FILTER_VALIDATE_INT);
                     }
                 }
             }
-            $productsArray[$product['id_product']]['price'] = filter_var($priceArray[0]['price'],FILTER_VALIDATE_FLOAT);
+            $productsArray[$product['id_product']]['price'] = filter_var($priceArray[0]['price'], FILTER_VALIDATE_FLOAT);
         }
 
 
