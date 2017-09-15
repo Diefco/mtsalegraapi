@@ -28,6 +28,7 @@
  */
 $(document).ready(function() {
 	$('#left_column').remove();
+	$('#right_column').remove();
     $('#center_column').removeClass('col-sm-9').addClass('col-sm-12');
 
     /**
