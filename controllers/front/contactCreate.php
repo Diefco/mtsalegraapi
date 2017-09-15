@@ -209,7 +209,7 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
                     $confirmValues[] = 'location';
                 }
 
-                if (count($confirmValues == 0)) {
+                if (count($confirmValues) == 0) {
                     $indexArray = array_search($idCustomersList[$i], $customerList);
 
                     if (Tools::getIsset('contact_'.$idCustomersList[$i].'_list')) {
