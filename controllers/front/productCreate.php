@@ -70,32 +70,41 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                 ->orderBy('id_product');
             $store_product = Db::getInstance()->executeS($storeSql);
 
-            $this->printer($store_product);
-
             //  First Execution (Module recently installed)
-            if (count($store_product) > 0 && $store_product[0]['id_customer'] == 1 && $store_product[0]['firstname'] = "John" ||
-                    $store_product[0]['id_customer'] == 1 && $store_product[0]['firstname'] = "John") {
-                Db::getInstance()->insert('mtsalegraapi_contacts', array(
-                    'id_contact_store'  => 1,
-                    'id_contact_alegra' => 0,
-                    'contact_ignored' => true
-                ));
+            if (count($store_product) > 0 &&
+                $store_product[0]['id_product'] == 1 && $store_product[0]['reference'] = "demo_1" &&
+                $store_product[1]['id_product'] == 2 && $store_product[1]['reference'] = "demo_2" &&
+                $store_product[2]['id_product'] == 3 && $store_product[2]['reference'] = "demo_3" &&
+                $store_product[3]['id_product'] == 4 && $store_product[3]['reference'] = "demo_4" &&
+                $store_product[4]['id_product'] == 5 && $store_product[4]['reference'] = "demo_5" &&
+                $store_product[5]['id_product'] == 6 && $store_product[5]['reference'] = "demo_6" &&
+                $store_product[6]['id_product'] == 7 && $store_product[6]['reference'] = "demo_7") {
+                $products = array();
+                for ($i = 1; $i <= 7; $i++) {
+                    $products[] = array (
+                        'id_product_store'  => $i,
+                        'id_product_alegra' => 0,
+                        'product_ignored' => true
+                    );
+                }
+
+                Db::getInstance()->insert('mtsalegraapi_products', $products);
             }
         }
 
-
         $mtsQuery = new DbQuery();
-        $mtsQuery->select('id_customer')
-            ->from('customer')
-            ->leftJoin('mtsalegraapi_contacts', null, 'ps_customer.id_customer = ps_mtsalegraapi_contacts.id_contact_store')
-            ->where('ps_mtsalegraapi_contacts.id_contact_alegra is NULL || ps_mtsalegraapi_contacts.contact_ignored is NULL ')
+        $mtsQuery->select('id_product')
+            ->from('product')
+            ->leftJoin('mtsalegraapi_products', null, 'ps_product.id_product = ps_mtsalegraapi_products.id_product_store')
+            ->where('ps_mtsalegraapi_products.id_product_alegra is NULL || ps_mtsalegraapi_products.product_ignored is NULL ')
             ->limit($limitQuery)
-            ->orderBy('id_customer');
+            ->orderBy('id_product');
         $mts_join = Db::getInstance()->executeS($mtsQuery);
 
         $customerBundle = array();
         $idCustomersList = array();
 
+        $this->printer($mts_join);
         foreach ($mts_join as $key => $valueInfo) {
             $idCustomersList[] = $valueInfo['id_customer'];
             //  Requesting necessary customer information
