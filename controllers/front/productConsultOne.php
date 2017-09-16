@@ -61,7 +61,7 @@ class MtsAlegraApiProductConsultOneModuleFrontController extends ModuleFrontCont
         $id_product = filter_var(Tools::getValue('id_product'), FILTER_SANITIZE_NUMBER_INT);
 
         if ($id_product != null && $id_product != 0 && $id_product != '') {
-            $url = 'https://app.alegra.com/api/v1/items/' . $id_product;
+            $url = 'https://app.alegra.com/api/v1/items/'.$id_product;
             $headers = array(
                 'Accept: application/json',
                 'Content-Type: application/json; charset=utf-8',
