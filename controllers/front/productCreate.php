@@ -262,7 +262,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
 
     private function sendToApi($authToken, $url, $method, $request = null)
     {
-        $method = strtoupper($method);
+        $method = Tools::strtoupper($method);
         if (!($method != 'POST' || $method != 'GET') || $method == null) {
             $this->printer('El método debe ser POST o GET.', __LINE__, false);
             return false;
@@ -290,7 +290,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
 
         $validatedUrl = false;
         foreach ($toValidateUrl as $endpoint) {
-            if (strtolower($url) == $endpoint) {
+            if (Tools::strtolower($url) == $endpoint) {
                 $validatedUrl = true;
             }
         }
