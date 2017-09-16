@@ -45,8 +45,8 @@ class MtsAlegraApiContactConsultOneModuleFrontController extends ModuleFrontCont
                 'mtsalegraapi',
                 'login',
                 array(),
-                Configuration::get('PS_SSL_ENABLED'))
-            );
+                Configuration::get('PS_SSL_ENABLED')
+            ));
         }
 
         /**
@@ -95,8 +95,8 @@ class MtsAlegraApiContactConsultOneModuleFrontController extends ModuleFrontCont
             'mtsalegraapi',
             'home',
             array(),
-            Configuration::get('PS_SSL_ENABLED'))
-        );
+            Configuration::get('PS_SSL_ENABLED')
+        ));
         $this->setTemplate('contacts/consultOne.tpl');
     }
 }
