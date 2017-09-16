@@ -41,7 +41,12 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         $cookie = new Cookie('session');
 
         if ($cookie->auth != true) {
-            Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED')));
+            Tools::redirect($this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'login',
+                array(),
+                Configuration::get('PS_SSL_ENABLED')
+            ));
         }
 
         /**
@@ -51,7 +56,9 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
          * Otherwise, this module will not work properly.
          */
 
-        $authToken = base64_encode(Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token'));
+        $authToken = base64_encode(
+            Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token')
+        );
 
         $limitQuery = Configuration::get('mts_AlgApi_limitQuery');
 
@@ -71,7 +78,12 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
             $store_contact = Db::getInstance()->executeS($storeSql);
 
             //  First Execution (Module recently installed)
-            if (count($store_contact) > 0 && $store_contact[0]['id_customer'] == 1 && $store_contact[0]['firstname'] = "John" && $store_contact[0]['lastname'] = "DOE" && $store_contact[0]['email'] = "pub@prestashop.com") {
+            if (count($store_contact) > 0 &&
+                $store_contact[0]['id_customer'] == 1 &&
+                $store_contact[0]['firstname'] = "John" &&
+                    $store_contact[0]['lastname'] = "DOE" &&
+                        $store_contact[0]['email'] = "pub@prestashop.com"
+            ) {
                 Db::getInstance()->insert('mtsalegraapi_contacts', array(
                     'id_contact_store' => 1,
                     'id_contact_alegra' => 0,
@@ -83,8 +95,15 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         $mtsQuery = new DbQuery();
         $mtsQuery->select('id_customer')
             ->from('customer')
-            ->leftJoin('mtsalegraapi_contacts', null, 'ps_customer.id_customer = ps_mtsalegraapi_contacts.id_contact_store')
-            ->where('ps_mtsalegraapi_contacts.id_contact_alegra is NULL || ps_mtsalegraapi_contacts.contact_ignored is NULL ')
+            ->leftJoin(
+                'mtsalegraapi_contacts',
+                null,
+                'ps_customer.id_customer = ps_mtsalegraapi_contacts.id_contact_store'
+            )
+            ->where(
+                'ps_mtsalegraapi_contacts.id_contact_alegra is NULL ||
+                ps_mtsalegraapi_contacts.contact_ignored is NULL '
+            )
             ->limit($limitQuery)
             ->orderBy('id_customer');
         $mts_join = Db::getInstance()->executeS($mtsQuery);
@@ -96,7 +115,15 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
             $idCustomersList[] = $valueInfo['id_customer'];
             //  Requesting necessary customer information
             $customerInfoQuery = new DbQuery();
-            $customerInfoQuery->select('id_customer, firstname, lastname, email, company, date_upd')
+            $customerInfoQuery
+                ->select(
+                    'id_customer, 
+                    firstname, 
+                    lastname, 
+                    email, 
+                    company, 
+                    date_upd'
+                )
                 ->from('customer')
                 ->where('id_customer=' . $valueInfo['id_customer']);
             $customerInfo = Db::getInstance()->executeS($customerInfoQuery);
