@@ -35,7 +35,7 @@ if (!defined('_PS_VERSION_')) {
 class Mtsalegraapi extends Module
 {
     protected $config_form = false;
-    private $_postErrors = array();
+    private $postErrors = array();
 
     public function __construct()
     {
@@ -56,7 +56,10 @@ class Mtsalegraapi extends Module
         $this->displayName = $this->l('Metasysco.com - Facturación electrónica a través de Alegra');
         $this->description = $this->l('Plataforma de Facturación electrónica a través de la API de Alegra.');
 
-        $this->confirmUninstall = $this->l('¿Está seguro que desea desinstalar? Se borrará toda la información relacionada con la configuración del módulo.');
+        $this->confirmUninstall = $this->l(
+            '¿Está seguro que desea desinstalar? Se borrará toda la información relacionada con la configuración 
+            del módulo.'
+        );
 
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => '1.6.1.17');
     }
@@ -114,11 +117,13 @@ class Mtsalegraapi extends Module
         if (Tools::isSubmit('btnTooltipSubmit')) {
             // $this->postValidation('form_data');
 
-            if (!count($this->_postErrors)) {
+            if (!count($this->postErrors)) {
                 $this->postProcess();
-                $messages .= $this->displayConfirmation($this->l('Configuración de ayudas actualizada.'));
+                $messages .= $this->displayConfirmation($this->l(
+                    'Configuración de ayudas actualizada.'
+                ));
             } else {
-                foreach ($this->_postErrors as $err) {
+                foreach ($this->postErrors as $err) {
                     $messages .= $this->displayError($err);
                 }
             }
@@ -132,11 +137,13 @@ class Mtsalegraapi extends Module
         if (Tools::isSubmit('btnPlatformSubmit')) {
             $this->postValidation('form_data');
 
-            if (!count($this->_postErrors)) {
+            if (!count($this->postErrors)) {
                 $this->postProcess();
-                $messages .= $this->displayConfirmation($this->l('Información de inicio de sesión actualizada.'));
+                $messages .= $this->displayConfirmation($this->l(
+                    'Información de inicio de sesión actualizada.'
+                ));
             } else {
-                foreach ($this->_postErrors as $err) {
+                foreach ($this->postErrors as $err) {
                     $messages .= $this->displayError($err);
                 }
             }
@@ -150,11 +157,13 @@ class Mtsalegraapi extends Module
         if (Tools::isSubmit('btnAPISubmit')) {
             $this->postValidation('api_data');
 
-            if (!count($this->_postErrors)) {
+            if (!count($this->postErrors)) {
                 $this->postProcess();
-                $messages .= $this->displayConfirmation($this->l('Información de la API actualizada.'));
+                $messages .= $this->displayConfirmation($this->l(
+                    'Información de la API actualizada.'
+                ));
             } else {
-                foreach ($this->_postErrors as $err) {
+                foreach ($this->postErrors as $err) {
                     $messages .= $this->displayError($err);
                 }
             }
@@ -171,7 +180,12 @@ class Mtsalegraapi extends Module
         /**
          * Set in a smarty variable, the module dir path
          */
-        $this->context->smarty->assign('moduleLoginLink', $this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED')));
+        $this->context->smarty->assign('moduleLoginLink', $this->context->link->getModuleLink(
+            'mtsalegraapi',
+            'login',
+            array(),
+            Configuration::get('PS_SSL_ENABLED')
+        ));
         $this->context->smarty->assign('module_dir', $this->_path);
 
         /**
@@ -223,22 +237,33 @@ class Mtsalegraapi extends Module
         if ($form == 'form_data') {
             $user = Tools::getValue('mts_AlgApi_User');
             if (!$user || Tools::strlen($user) <= 7) {
-                $this->_postErrors[] = $this->l('El Usuario es requerido para el inicio de sesión. No puede ser vacío ni contener menos de 8 carácteres.');
+                $this->postErrors[] = $this->l(
+                    'El Usuario es requerido para el inicio de sesión. No puede ser vacío ni contener menos de 8 
+                    caracteres.'
+                );
             }
 
             $pass = Tools::getValue('mts_AlgApi_Password');
             if (!$pass || Tools::strlen($pass) <= 7) {
-                $this->_postErrors[] = $this->l('La Contraseña es requerida para el inicio de sesión. No puede ser vacío ni contener menos de 8 carácteres.');
+                $this->postErrors[] = $this->l(
+                    'La Contraseña es requerida para el inicio de sesión. No puede ser vacío ni contener menos de
+                     8 caracteres.'
+                );
             }
         }
 
         if ($form == 'api_data') {
             if (!Tools::getValue('mts_AlgApi_Email')) {
-                $this->_postErrors[] = $this->l('El Email es requerido para la API. Sin esta información no podrá comunicarse con la plataforma de Alegra.');
+                $this->postErrors[] = $this->l(
+                    'El Email es requerido para la API. Sin esta información no podrá comunicarse con la 
+                    plataforma de Alegra.'
+                );
             }
 
             if (!Tools::getValue('mts_AlgApi_Token')) {
-                $this->_postErrors[] = $this->l('El Token es requerido para la API. Sin esta información no podrá comunicarse con la plataforma de Alegra.');
+                $this->postErrors[] = $this->l('El Token es requerido para la API. Sin esta información no podrá 
+                comunicarse con la plataforma de Alegra.'
+                );
             }
         }
     }
@@ -311,7 +336,10 @@ class Mtsalegraapi extends Module
                         'label' => $this->l('¿Desea ocultar las ayudas?'),
                         'name' => 'mts_AlgApi_Tooltips',
                         'is_bool' => true,
-                        'desc' => $this->l('Active o desactive esta opción para ocultar las ayudas la próxima vez que ingrese a la configuración de este módulo. Puede volver a reactivarlas cuando lo necesite'),
+                        'desc' => $this->l(
+                            'Active o desactive esta opción para ocultar las ayudas la próxima vez que ingrese a 
+                            la configuración de este módulo. Puede volver a reactivarlas cuando lo necesite'
+                        ),
                         'values' => array(
                             array(
                                 'id' => 'active_on',
@@ -344,7 +372,10 @@ class Mtsalegraapi extends Module
                     array(
                         'type' => 'text',
                         'label' => $this->l('Usuario'),
-                        'desc' => $this->l('Ingrese un ID de Usuario con el que se conectará a la plataforma. No debe ser el mismo usuario de Alegra'),
+                        'desc' => $this->l(
+                            'Ingrese un ID de Usuario con el que se conectará a la plataforma. No debe ser el 
+                            mismo usuario de Alegra'
+                        ),
                         'class' => 'md',
                         'name' => 'mts_AlgApi_User',
                         'required' => true
@@ -352,7 +383,10 @@ class Mtsalegraapi extends Module
                     array(
                         'type' => 'password',
                         'label' => $this->l('Contraseña'),
-                        'desc' => $this->l('Ingrese una contraseña de Usuario con el que se conectará a la plataforma. No debe ser la misma contraseña de Alegra'),
+                        'desc' => $this->l(
+                            'Ingrese una contraseña de Usuario con el que se conectará a la plataforma. No debe 
+                            ser la misma contraseña de Alegra'
+                        ),
                         'name' => 'mts_AlgApi_Password',
                         'required' => true
                     )
@@ -383,14 +417,20 @@ class Mtsalegraapi extends Module
                     array(
                         'type' => 'text',
                         'label' => $this->l('Token'),
-                        'desc' => $this->l('Ingrese el Token brindado por la plataforma de Alegra. Si no cuenta con uno, solicítelo a través de la misma plataforma.'),
+                        'desc' => $this->l(
+                            'Ingrese el Token brindado por la plataforma de Alegra. Si no cuenta con uno, 
+                            solicítelo a través de la misma plataforma.'
+                        ),
                         'name' => 'mts_AlgApi_Token',
                         'required' => true
                     ),
                     array(
                         'type' => 'select',
                         'label' => $this->l('Limite de resultados'),
-                        'desc' => $this->l('Seleccione el limite de resultados que desea ver en la creación de productos, contactos o facturas. Entre menor sea el límite, mejor será el rendimiento.'),
+                        'desc' => $this->l(
+                            'Seleccione el limite de resultados que desea ver en la creación de productos, 
+                            contactos o facturas. Entre menor sea el límite, mejor será el rendimiento.'
+                        ),
                         'name' => 'mts_AlgApi_limitQuery',
                         'required' => false,
                         'options' => $limitOptions

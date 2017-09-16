@@ -63,10 +63,14 @@ class MtsAlegraApiInvoiceConsultMultipleModuleFrontController extends ModuleFron
         /**
          * https://app.alegra.com/api/v1/invoices/<GET_params>
          * The next parameters can be sent by GET method
-         * @var int     start               Opcional    Must contain the Invoice ID registered on Alegra. This ID will be the product when the consult start
-         * @var int     limit               Opcional    Must contain the quantity of invoices to be consulted. Max number is 30
-         * @var string  order_direction     Opcional    (ASC o DESC) Sort ascending or descending the products listed in the query
-         * @var string  order_field         Opcional    (id, name, reference, description) Order the products listed in the query, according to the selected column
+         * @var int     start               Opcional    Must contain the Invoice ID registered on Alegra. This ID will
+         *                                              be the product when the consult start
+         * @var int     limit               Opcional    Must contain the quantity of invoices to be consulted. Max
+         *                                              number is 30
+         * @var string  order_direction     Opcional    (ASC o DESC) Sort ascending or descending the products listed in
+         *                                              the query
+         * @var string  order_field         Opcional    (id, name, reference, description) Order the products listed in
+         *                                              the query, according to the selected column
          */
 
         $queryArray = array();
