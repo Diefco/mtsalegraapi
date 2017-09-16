@@ -74,7 +74,7 @@ class Mtsalegraapi extends Module
         Configuration::updateValue('mts_AlgApi_Token', '');
         Configuration::updateValue('mts_AlgApi_limitQuery', '5');
 
-        include(dirname(__FILE__).'/sql/install.php');
+        include(dirname(__FILE__) . '/sql/install.php');
 
         return parent::install() &&
             $this->registerHook('header') &&
@@ -90,7 +90,7 @@ class Mtsalegraapi extends Module
         Configuration::deleteByName('mts_AlgApi_Token');
         Configuration::deleteByName('mts_AlgApi_limitQuery');
 
-        include(dirname(__FILE__).'/sql/uninstall.php');
+        include(dirname(__FILE__) . '/sql/uninstall.php');
 
         return parent::uninstall();
     }
@@ -175,12 +175,12 @@ class Mtsalegraapi extends Module
         $this->context->smarty->assign('module_dir', $this->_path);
 
         /**
-        * Define a variable with a template HTML content
-        */
+         * Define a variable with a template HTML content
+         */
 
-        $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
+        $output = $this->context->smarty->fetch($this->local_path . 'views/templates/admin/configure.tpl');
 
-        return $output.$messages.$this->renderForm();
+        return $output . $messages . $this->renderForm();
     }
 
     private function postValidation($form)
@@ -224,7 +224,7 @@ class Mtsalegraapi extends Module
         $helper->identifier = $this->identifier;
         $helper->submit_action = 'submitMtspayuapiModule';
         $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false)
-            .'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
+            . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
         $helper->token = Tools::getAdminTokenLite('AdminModules');
 
         $helper->tpl_vars = array(
@@ -267,8 +267,8 @@ class Mtsalegraapi extends Module
         $tooltip_form = array(
             'form' => array(
                 'legend' => array(
-                'title' => $this->l('Configuración de ayudas'),
-                'icon' => 'icon-info',
+                    'title' => $this->l('Configuración de ayudas'),
+                    'icon' => 'icon-info',
                 ),
                 'input' => array(
                     array(
@@ -407,13 +407,13 @@ class Mtsalegraapi extends Module
     }
 
     /**
-    * Add the CSS & JavaScript files you want to be loaded in the BO.
-    */
+     * Add the CSS & JavaScript files you want to be loaded in the BO.
+     */
     public function hookBackOfficeHeader()
     {
         if (Tools::getValue('configure') == $this->name || Tools::getValue('module_name') == $this->name) {
-            $this->context->controller->addJS($this->_path.'views/js/back.js');
-            $this->context->controller->addCSS($this->_path.'views/css/back.css');
+            $this->context->controller->addJS($this->_path . 'views/js/back.js');
+            $this->context->controller->addCSS($this->_path . 'views/css/back.css');
         }
     }
 
@@ -423,8 +423,8 @@ class Mtsalegraapi extends Module
     public function hookHeader()
     {
         if (Tools::getValue('module') == $this->name) {
-            $this->context->controller->addCSS($this->_path.'/views/css/front.css');
-            $this->context->controller->addJS($this->_path.'/views/js/front.js');
+            $this->context->controller->addCSS($this->_path . '/views/css/front.css');
+            $this->context->controller->addJS($this->_path . '/views/js/front.js');
         }
     }
 }
