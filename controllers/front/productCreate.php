@@ -220,6 +220,8 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
 
         $postValues = Tools::getAllValues();
 
+        $this->printer($postValues, __LINE__, false);
+
 //        $sentInfo = $this->sendToApi($authToken, 'items', 'post', $postValues);
 
         $this->context->smarty->assign('products', $productsArray);
