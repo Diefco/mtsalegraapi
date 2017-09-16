@@ -29,12 +29,12 @@
   -->
 
 <module>
-	<name>mtsalegraapi</name>
-	<displayName><![CDATA[Metasysco.com - Facturación electrónica a través de Alegra]]></displayName>
-	<version><![CDATA[1.1.0]]></version>
-	<description><![CDATA[Plataforma de Facturación electrónica a través de la API de Alegra.]]></description>
-	<author><![CDATA[Metasysco S.A.S.]]></author>
-	<tab><![CDATA[billing_invoicing]]></tab>
-	<is_configurable>1</is_configurable>
-	<need_instance>1</need_instance>
+    <name>mtsalegraapi</name>
+    <displayName><![CDATA[Metasysco.com - Facturación electrónica a través de Alegra]]></displayName>
+    <version><![CDATA[1.1.0]]></version>
+    <description><![CDATA[Plataforma de Facturación electrónica a través de la API de Alegra.]]></description>
+    <author><![CDATA[Metasysco S.A.S.]]></author>
+    <tab><![CDATA[billing_invoicing]]></tab>
+    <is_configurable>1</is_configurable>
+    <need_instance>1</need_instance>
 </module>

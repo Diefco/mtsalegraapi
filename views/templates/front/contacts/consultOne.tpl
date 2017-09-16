@@ -171,7 +171,7 @@
                 </tr>
             {/if}
             {if isset ($contact.seller)}
-            <th colspan="2">{l s='Vendedor' mod='mtsalegraapi'}</th>
+                <th colspan="2">{l s='Vendedor' mod='mtsalegraapi'}</th>
                 {if isset ($contact.seller.id)}
                     <tr>
                         <td class="table-title">

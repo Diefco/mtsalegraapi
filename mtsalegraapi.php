@@ -183,6 +183,41 @@ class Mtsalegraapi extends Module
         return $output . $messages . $this->renderForm();
     }
 
+    /**
+     * Save form data.
+     */
+    protected function postProcess()
+    {
+        $form_values = $this->getConfigFormValues();
+
+        foreach (array_keys($form_values) as $key) {
+            if ($key == 'mts_AlgApi_Password') {
+                Configuration::updateValue($key, password_hash(Tools::getValue($key), PASSWORD_BCRYPT));
+            } else {
+                Configuration::updateValue($key, Tools::getValue($key));
+            }
+        }
+    }
+
+    /**
+     * Set values for the inputs.
+     */
+    protected function getConfigFormValues()
+    {
+        $config = Configuration::getMultiple(
+            array(
+                'mts_AlgApi_Tooltips',
+                'mts_AlgApi_User',
+                'mts_AlgApi_Password',
+                'mts_AlgApi_limitQuery',
+                'mts_AlgApi_Email',
+                'mts_AlgApi_Token',
+            )
+        );
+
+        return $config;
+    }
+
     private function postValidation($form)
     {
         if ($form == 'form_data') {
@@ -369,41 +404,6 @@ class Mtsalegraapi extends Module
         );
 
         return array($tooltip_form, $platform_form, $alegra_api_form);
-    }
-
-    /**
-     * Set values for the inputs.
-     */
-    protected function getConfigFormValues()
-    {
-        $config = Configuration::getMultiple(
-            array(
-                'mts_AlgApi_Tooltips',
-                'mts_AlgApi_User',
-                'mts_AlgApi_Password',
-                'mts_AlgApi_limitQuery',
-                'mts_AlgApi_Email',
-                'mts_AlgApi_Token',
-            )
-        );
-
-        return $config;
-    }
-
-    /**
-     * Save form data.
-     */
-    protected function postProcess()
-    {
-        $form_values = $this->getConfigFormValues();
-
-        foreach (array_keys($form_values) as $key) {
-            if ($key == 'mts_AlgApi_Password') {
-                Configuration::updateValue($key, password_hash(Tools::getValue($key), PASSWORD_BCRYPT));
-            } else {
-                Configuration::updateValue($key, Tools::getValue($key));
-            }
-        }
     }
 
     /**

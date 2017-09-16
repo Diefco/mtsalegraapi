@@ -61,7 +61,7 @@ class MtsAlegraApiInvoiceConsultOneModuleFrontController extends ModuleFrontCont
         $id_invoice = filter_var(Tools::getValue('id_invoice'), FILTER_SANITIZE_NUMBER_INT);
 
         if ($id_invoice != null && $id_invoice != 0 && $id_invoice != '') {
-            $url = 'https://app.alegra.com/api/v1/invoices/'.$id_invoice;
+            $url = 'https://app.alegra.com/api/v1/invoices/' . $id_invoice;
             $headers = array(
                 'Accept: application/json',
                 'Content-Type: application/json; charset=utf-8',

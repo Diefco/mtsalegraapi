@@ -47,7 +47,7 @@ class MtsAlegraApiLoginModuleFrontController extends ModuleFrontController
             $this->context->smarty->assign('error', 'Ingrese un usuario y/o contraseña.');
         }
 
-        $url= $this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED'));
+        $url = $this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED'));
         $this->context->smarty->assign('urlForm', $url);
         $this->setTemplate('login.tpl');
     }

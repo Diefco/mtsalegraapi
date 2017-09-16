@@ -39,7 +39,7 @@ class MtsAlegraApiHomeModuleFrontController extends ModuleFrontController
         parent::initContent();
 
         $cookie = new Cookie('session');
-        
+
         if ($cookie->auth != true || Tools::getValue('logout') == true) {
             Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED')));
         }

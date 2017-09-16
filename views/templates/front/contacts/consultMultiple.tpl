@@ -75,7 +75,7 @@
     </form>
 </fieldset>
 
-{if	isset ($contactList)}
+{if    isset ($contactList)}
     <table class=" table table-bordered table-condensed table-striped">
         <tr>
             <th>

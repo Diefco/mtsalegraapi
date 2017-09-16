@@ -30,30 +30,30 @@
 
 $sql = array();
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'mtsalegraapi_invoices` (
-    `id_order_store` int(11) NOT NULL,
-    `id_order_alegra` int(11) NULL,
-    `order_ignored` boolean,
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mtsalegraapi_invoices` (
+    `id_order_store` INT(11) NOT NULL,
+    `id_order_alegra` INT(11) NULL,
+    `order_ignored` BOOLEAN,
     PRIMARY KEY  (`id_order_store`)
-) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'mtsalegraapi_products` (
-    `id_product_store` int(11) NOT NULL,
-    `id_product_alegra` int(11) NULL,
-    `product_ignored` boolean,
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mtsalegraapi_products` (
+    `id_product_store` INT(11) NOT NULL,
+    `id_product_alegra` INT(11) NULL,
+    `product_ignored` BOOLEAN,
     PRIMARY KEY  (`id_product_store`)
-) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'mtsalegraapi_contacts` (
-    `id_contact_store` int(11) NOT NULL,
-    `id_contact_alegra` int(11) NULL,
-    `contact_ignored` boolean,
-    `dni` varchar(25),
-    `alias` varchar(100),
-    `state` varchar(100),
-    `observations` varchar(255),
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mtsalegraapi_contacts` (
+    `id_contact_store` INT(11) NOT NULL,
+    `id_contact_alegra` INT(11) NULL,
+    `contact_ignored` BOOLEAN,
+    `dni` VARCHAR(25),
+    `alias` VARCHAR(100),
+    `state` VARCHAR(100),
+    `observations` VARCHAR(255),
     PRIMARY KEY  (`id_contact_store`)
-) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=utf8;';
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {

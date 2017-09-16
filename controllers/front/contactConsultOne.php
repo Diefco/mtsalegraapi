@@ -61,7 +61,7 @@ class MtsAlegraApiContactConsultOneModuleFrontController extends ModuleFrontCont
         $id_contact = filter_var(Tools::getValue('id_contact'), FILTER_SANITIZE_NUMBER_INT);
 
         if ($id_contact != null && $id_contact != 0 && $id_contact != '') {
-            $url = 'https://app.alegra.com/api/v1/contacts/'.$id_contact;
+            $url = 'https://app.alegra.com/api/v1/contacts/' . $id_contact;
             $headers = array(
                 'Accept: application/json',
                 'Content-Type: application/json; charset=utf-8',
@@ -77,9 +77,7 @@ class MtsAlegraApiContactConsultOneModuleFrontController extends ModuleFrontCont
             $jsonRequest = curl_exec($ch);
             $contact = json_decode($jsonRequest, true);
 
-            $contact['internalContacts'] = array(
-
-            );
+            $contact['internalContacts'] = array();
 
             $this->context->smarty->assign('contact', $contact);
         } elseif ($id_contact == 0) {

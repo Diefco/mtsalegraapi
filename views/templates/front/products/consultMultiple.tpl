@@ -66,7 +66,7 @@
         <input type="submit" value="Enviar" class="btn btn-success">
     </form>
 </fieldset>
-{if	isset ($productList)}
+{if    isset ($productList)}
     <table class=" table table-bordered table-condensed table-striped">
         <tr>
             <th>
@@ -91,7 +91,6 @@
                     {$product.price.0.price|number_format:0|escape:'htmlall':'UTF-8'}
                 </td>
             </tr>
-
         {/foreach}
 
     </table>

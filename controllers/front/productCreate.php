@@ -72,16 +72,16 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
             //  First Execution (Module recently installed)
             if (count($store_product) > 0 &&
                 $store_product[0]['id_product'] == 1 && $store_product[0]['reference'] = "demo_1" &&
-                $store_product[1]['id_product'] == 2 && $store_product[1]['reference'] = "demo_2" &&
-                $store_product[2]['id_product'] == 3 && $store_product[2]['reference'] = "demo_3" &&
-                $store_product[3]['id_product'] == 4 && $store_product[3]['reference'] = "demo_4" &&
-                $store_product[4]['id_product'] == 5 && $store_product[4]['reference'] = "demo_5" &&
-                $store_product[5]['id_product'] == 6 && $store_product[5]['reference'] = "demo_6" &&
-                $store_product[6]['id_product'] == 7 && $store_product[6]['reference'] = "demo_7") {
+                    $store_product[1]['id_product'] == 2 && $store_product[1]['reference'] = "demo_2" &&
+                        $store_product[2]['id_product'] == 3 && $store_product[2]['reference'] = "demo_3" &&
+                            $store_product[3]['id_product'] == 4 && $store_product[3]['reference'] = "demo_4" &&
+                                $store_product[4]['id_product'] == 5 && $store_product[4]['reference'] = "demo_5" &&
+                                    $store_product[5]['id_product'] == 6 && $store_product[5]['reference'] = "demo_6" &&
+                                        $store_product[6]['id_product'] == 7 && $store_product[6]['reference'] = "demo_7") {
                 $products = array();
                 for ($i = 1; $i <= 7; $i++) {
-                    $products[] = array (
-                        'id_product_store'  => $i,
+                    $products[] = array(
+                        'id_product_store' => $i,
                         'id_product_alegra' => 0,
                         'product_ignored' => true
                     );
@@ -227,39 +227,6 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         $this->setTemplate('products/create.tpl');
     }
 
-    private function uniqueDataArray($array, $index, $subIndex)
-    {
-        $arrayData = array();
-        foreach ($array[$index] as $subArray) {
-            if (count($subArray) > 0) {
-                $arrayData[] = $subArray[$subIndex];
-            }
-        }
-        return $arrayData;
-    }
-
-    private function joinInlineData($metaArray)
-    {
-        $indexedArray = array();
-        $arrayKeys = array();
-        $condensed = array();
-
-        foreach ($metaArray as $keyMeta => $valueMeta) {
-            $indexedArray[$keyMeta] = count($valueMeta);
-            $arrayKeys[] = $keyMeta;
-        }
-
-        $maxArray = max($indexedArray);
-
-        for ($i = 0; $i < $maxArray; $i++) {
-            foreach ($arrayKeys as $value) {
-                $condensed[$i][$value] = $metaArray[$value][$i];
-            }
-        }
-
-        return $condensed;
-    }
-
     private function sendToApi($authToken, $url, $method, $request = null)
     {
         $method = Tools::strtoupper($method);
@@ -302,7 +269,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
 
         $jsonRequest = json_encode($request);
 
-        $urlRequest = 'https://app.alegra.com/api/v1/'.$url.'/';
+        $urlRequest = 'https://app.alegra.com/api/v1/' . $url . '/';
         $headers = array(
             'Accept: application/json',
             'Content-Type: application/json; charset=utf-8',
@@ -333,11 +300,44 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         echo "<pre>";
         print_r($var);
         if ($line) {
-            print_r("<br>" .gettype($var) . ' en la línea ' . $line);
+            print_r("<br>" . gettype($var) . ' en la línea ' . $line);
         }
         echo "<br></pre>";
         if ($die) {
             die();
         }
+    }
+
+    private function uniqueDataArray($array, $index, $subIndex)
+    {
+        $arrayData = array();
+        foreach ($array[$index] as $subArray) {
+            if (count($subArray) > 0) {
+                $arrayData[] = $subArray[$subIndex];
+            }
+        }
+        return $arrayData;
+    }
+
+    private function joinInlineData($metaArray)
+    {
+        $indexedArray = array();
+        $arrayKeys = array();
+        $condensed = array();
+
+        foreach ($metaArray as $keyMeta => $valueMeta) {
+            $indexedArray[$keyMeta] = count($valueMeta);
+            $arrayKeys[] = $keyMeta;
+        }
+
+        $maxArray = max($indexedArray);
+
+        for ($i = 0; $i < $maxArray; $i++) {
+            foreach ($arrayKeys as $value) {
+                $condensed[$i][$value] = $metaArray[$value][$i];
+            }
+        }
+
+        return $condensed;
     }
 }

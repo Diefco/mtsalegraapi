@@ -26,9 +26,9 @@
  * @license http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @version 1.1.0
  */
-$(document).ready(function() {
-	$('#left_column').remove();
-	$('#right_column').remove();
+$(document).ready(function () {
+    $('#left_column').remove();
+    $('#right_column').remove();
     $('#center_column').removeClass('col-sm-9').addClass('col-sm-12');
 
     /**
@@ -36,11 +36,11 @@ $(document).ready(function() {
      */
     var listFields = ['dni', 'alias', 'phone', 'phone_mobile', 'address', 'location'];
 
-    $('.selectorProfile').change(function(){
+    $('.selectorProfile').change(function () {
         var selector = '#'.concat($(this).attr('id'));
         var header = selector.replace('_option', '_');
 
-        listFields.forEach(function (item, index){
+        listFields.forEach(function (item, index) {
             var completeID = header.concat(item);
             $(completeID).val($(selector).val());
         });

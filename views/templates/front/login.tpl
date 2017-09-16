@@ -28,18 +28,20 @@
 *}
 
 {if isset($error)}
-	{l s='Error' mod='mtsalegraapi'}: {$error|escape:'htmlall':'UTF-8'}.
+    {l s='Error' mod='mtsalegraapi'}: {$error|escape:'htmlall':'UTF-8'}.
 {/if}
 <div>
-	<form class="form-inline" action="{$urlForm|escape:'htmlall':'UTF-8'}" method="post" accept-charset="utf-8">
-		<div class="form-group">
-			<label class="sr-only" for="user">{l s='Usuario' mod='mtsalegraapi'}</label>
-			<input type="text" class="form-control" id="user" name="user" placeholder="{l s='Usuario' mod='mtsalegraapi'}">
-		</div>
-		<div class="form-group">
-			<label class="sr-only" for="password">{l s='Contraseña' mod='mtsalegraapi'}</label>
-			<input type="password" class="form-control" id="password" name="password" placeholder="{l s='Contraseña' mod='mtsalegraapi'}">
-		</div>
-		<button type="submit" class="btn btn-default">{l s='Ingresar' mod='mtsalegraapi'}</button>
-	</form>
+    <form class="form-inline" action="{$urlForm|escape:'htmlall':'UTF-8'}" method="post" accept-charset="utf-8">
+        <div class="form-group">
+            <label class="sr-only" for="user">{l s='Usuario' mod='mtsalegraapi'}</label>
+            <input type="text" class="form-control" id="user" name="user"
+                   placeholder="{l s='Usuario' mod='mtsalegraapi'}">
+        </div>
+        <div class="form-group">
+            <label class="sr-only" for="password">{l s='Contraseña' mod='mtsalegraapi'}</label>
+            <input type="password" class="form-control" id="password" name="password"
+                   placeholder="{l s='Contraseña' mod='mtsalegraapi'}">
+        </div>
+        <button type="submit" class="btn btn-default">{l s='Ingresar' mod='mtsalegraapi'}</button>
+    </form>
 </div>

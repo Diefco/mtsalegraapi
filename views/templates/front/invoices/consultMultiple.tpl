@@ -69,7 +69,7 @@
     </form>
 </fieldset>
 
-{if	isset ($invoiceList)}
+{if    isset ($invoiceList)}
     <table class=" table table-bordered table-condensed table-striped">
         <tr>
             <th>
