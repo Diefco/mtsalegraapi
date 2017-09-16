@@ -41,7 +41,12 @@ class MtsAlegraApiContactConsultMultipleModuleFrontController extends ModuleFron
         $cookie = new Cookie('session');
 
         if ($cookie->auth != true) {
-            Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED')));
+            Tools::redirect($this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'login',
+                array(),
+                Configuration::get('PS_SSL_ENABLED')
+            ));
         }
 
         /**
@@ -51,45 +56,73 @@ class MtsAlegraApiContactConsultMultipleModuleFrontController extends ModuleFron
          * Otherwise, this module will not work properly.
          */
 
-        $authToken = base64_encode(Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token'));
+        $authToken = base64_encode(
+            Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token')
+        );
 
         /**
          * https://app.alegra.com/api/v1/contacts/<GET_params>
          * The next parameters can be sent by GET method
-         * @var int     start               Opcional    Must contain the Contact ID registered on Alegra. This ID will be the product when the consult start
-         * @var int     limit               Opcional    Must contain the quantity of products to be consulted. Max number is 30
-         * @var string  order_direction     Opcional    (ASC o DESC) Sort ascending or descending the products listed in the query
-         * @var string  order_field         Opcional    (id, name, reference, description) Order the products listed in the query, according to the selected column
+         * @var int     start               Opcional    Must contain the Contact ID registered on Alegra. This ID will
+         *                                              be the product when the consult start
+         * @var int     limit               Opcional    Must contain the quantity of products to be consulted. Max
+         *                                              number is 30
+         * @var string  order_direction     Opcional    (ASC o DESC) Sort ascending or descending the products listed in
+         *                                              the query
+         * @var string  order_field         Opcional    (id, name, reference, description) Order the products listed in
+         *                                              the query, according to the selected column
          * @var string  query               Opcional    String of characters that will be part of the search
          */
 
         $queryArray = array();
 
-        if (Tools::getIsset('start') && Tools::getValue('start') != '') {
+        if (
+            Tools::getIsset('start') &&
+            Tools::getValue('start') != ''
+        ) {
             $queryArray['start'] = Tools::getValue('start');
         }
 
-        if (Tools::getIsset('limit') && Tools::getValue('limit') != '' && Tools::getValue('limit') <= 30) {
+        if (Tools::getIsset('limit') &&
+            Tools::getValue('limit') != '' &&
+            Tools::getValue('limit') <= 30
+        ) {
             $queryArray['limit'] = Tools::getValue('limit');
         }
 
-        if (Tools::getIsset('order_direction') && (Tools::getValue('order_direction') == 'ASC' || Tools::getValue('order_direction') == 'DESC')) {
+        if (Tools::getIsset('order_direction') && (
+                Tools::getValue('order_direction') == 'ASC' ||
+                Tools::getValue('order_direction') == 'DESC'
+            )
+        ) {
             $queryArray['order_direction'] = Tools::getValue('order_direction');
         }
 
-        if (Tools::getIsset('order_field') && Tools::getValue('order_field') != '') {
+        if (
+            Tools::getIsset('order_field') &&
+            Tools::getValue('order_field') != ''
+        ) {
             $queryArray['order_field'] = Tools::getValue('order_field');
         }
 
-        if (Tools::getIsset('query') && Tools::getValue('query') != '') {
+        if (
+            Tools::getIsset('query') &&
+            Tools::getValue('query') != ''
+        ) {
             $queryArray['query'] = Tools::getValue('query');
         }
 
-        if (Tools::getIsset('type') && Tools::getValue('type') != '') {
+        if (
+            Tools::getIsset('type') &&
+            Tools::getValue('type') != ''
+        ) {
             $queryArray['type'] = Tools::getValue('type');
         }
 
-        if (Tools::getIsset('metadata') && Tools::getValue('metadata') != '') {
+        if (
+            Tools::getIsset('metadata') &&
+            Tools::getValue('metadata') != ''
+        ) {
             $queryArray['metadata'] = Tools::getValue('metadata');
         }
 
@@ -120,7 +153,12 @@ class MtsAlegraApiContactConsultMultipleModuleFrontController extends ModuleFron
 
             $this->context->smarty->assign('contactList', $contactList);
         }
-        $this->context->smarty->assign('backLink', $this->context->link->getModuleLink('mtsalegraapi', 'home', array(), Configuration::get('PS_SSL_ENABLED')));
+        $this->context->smarty->assign('backLink', $this->context->link->getModuleLink(
+            'mtsalegraapi',
+            'home',
+            array(),
+            Configuration::get('PS_SSL_ENABLED')
+        ));
         $this->setTemplate('contacts/consultMultiple.tpl');
     }
 }
