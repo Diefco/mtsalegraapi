@@ -261,8 +261,9 @@ class Mtsalegraapi extends Module
             }
 
             if (!Tools::getValue('mts_AlgApi_Token')) {
-                $this->postErrors[] = $this->l('El Token es requerido para la API. Sin esta información no podrá 
-                comunicarse con la plataforma de Alegra.'
+                $this->postErrors[] = $this->l(
+                    'El Token es requerido para la API. Sin esta información no podrá comunicarse con la 
+                    plataforma de Alegra.'
                 );
             }
         }
