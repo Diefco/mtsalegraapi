@@ -76,8 +76,7 @@ class MtsAlegraApiContactConsultMultipleModuleFrontController extends ModuleFron
 
         $queryArray = array();
 
-        if (
-            Tools::getIsset('start') &&
+        if (Tools::getIsset('start') &&
             Tools::getValue('start') != ''
         ) {
             $queryArray['start'] = Tools::getValue('start');
@@ -98,29 +97,25 @@ class MtsAlegraApiContactConsultMultipleModuleFrontController extends ModuleFron
             $queryArray['order_direction'] = Tools::getValue('order_direction');
         }
 
-        if (
-            Tools::getIsset('order_field') &&
+        if (Tools::getIsset('order_field') &&
             Tools::getValue('order_field') != ''
         ) {
             $queryArray['order_field'] = Tools::getValue('order_field');
         }
 
-        if (
-            Tools::getIsset('query') &&
+        if (Tools::getIsset('query') &&
             Tools::getValue('query') != ''
         ) {
             $queryArray['query'] = Tools::getValue('query');
         }
 
-        if (
-            Tools::getIsset('type') &&
+        if (Tools::getIsset('type') &&
             Tools::getValue('type') != ''
         ) {
             $queryArray['type'] = Tools::getValue('type');
         }
 
-        if (
-            Tools::getIsset('metadata') &&
+        if (Tools::getIsset('metadata') &&
             Tools::getValue('metadata') != ''
         ) {
             $queryArray['metadata'] = Tools::getValue('metadata');
