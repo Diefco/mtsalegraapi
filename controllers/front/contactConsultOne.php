@@ -41,7 +41,12 @@ class MtsAlegraApiContactConsultOneModuleFrontController extends ModuleFrontCont
         $cookie = new Cookie('session');
 
         if ($cookie->auth != true) {
-            Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED')));
+            Tools::redirect($this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'login',
+                array(),
+                Configuration::get('PS_SSL_ENABLED'))
+            );
         }
 
         /**
@@ -51,7 +56,9 @@ class MtsAlegraApiContactConsultOneModuleFrontController extends ModuleFrontCont
          * Otherwise, this module will not work properly.
          */
 
-        $authToken = base64_encode(Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token'));
+        $authToken = base64_encode(
+            Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token')
+        );
 
         /**
          * https://app.alegra.com/api/v1/contacts/<id_contact>
@@ -84,7 +91,12 @@ class MtsAlegraApiContactConsultOneModuleFrontController extends ModuleFrontCont
             $this->context->smarty->assign('errorBO', true);
         }
 
-        $this->context->smarty->assign('backLink', $this->context->link->getModuleLink('mtsalegraapi', 'home', array(), Configuration::get('PS_SSL_ENABLED')));
+        $this->context->smarty->assign('backLink', $this->context->link->getModuleLink(
+            'mtsalegraapi',
+            'home',
+            array(),
+            Configuration::get('PS_SSL_ENABLED'))
+        );
         $this->setTemplate('contacts/consultOne.tpl');
     }
 }
