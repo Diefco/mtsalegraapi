@@ -41,7 +41,12 @@ class MtsAlegraApiProductConsultMultipleModuleFrontController extends ModuleFron
         $cookie = new Cookie('session');
 
         if ($cookie->auth != true) {
-            Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED')));
+            Tools::redirect($this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'login',
+                array(),
+                Configuration::get('PS_SSL_ENABLED')
+            ));
         }
 
         /**
@@ -51,7 +56,9 @@ class MtsAlegraApiProductConsultMultipleModuleFrontController extends ModuleFron
          * Otherwise, this module will not work properly.
          */
 
-        $authToken = base64_encode(Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token'));
+        $authToken = base64_encode(
+            Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token')
+        );
 
         /**
          * https://app.alegra.com/api/v1/items/<GET_params>
@@ -65,31 +72,48 @@ class MtsAlegraApiProductConsultMultipleModuleFrontController extends ModuleFron
 
         $queryArray = array();
 
-        if (Tools::getIsset('start') && Tools::getValue('start') != '') {
+        if (Tools::getIsset('start') &&
+            Tools::getValue('start') != ''
+        ) {
             $queryArray['start'] = Tools::getValue('start');
         }
 
-        if (Tools::getIsset('limit') && Tools::getValue('limit') != '' && Tools::getValue('limit') <= 30) {
+        if (Tools::getIsset('limit') &&
+            Tools::getValue('limit') != '' &&
+            Tools::getValue('limit') <= 30
+        ) {
             $queryArray['limit'] = Tools::getValue('limit');
         }
 
-        if (Tools::getIsset('order_direction') && (Tools::getValue('order_direction') == 'ASC' || Tools::getValue('order_direction') == 'DESC')) {
+        if (Tools::getIsset('order_direction') && (
+                Tools::getValue('order_direction') == 'ASC' ||
+                Tools::getValue('order_direction') == 'DESC'
+            )
+        ) {
             $queryArray['order_direction'] = Tools::getValue('order_direction');
         }
 
-        if (Tools::getIsset('order_field') && Tools::getValue('order_field') != '') {
+        if (Tools::getIsset('order_field') &&
+            Tools::getValue('order_field') != ''
+        ) {
             $queryArray['order_field'] = Tools::getValue('order_field');
         }
 
-        if (Tools::getIsset('query') && Tools::getValue('query') != '') {
+        if (Tools::getIsset('query') &&
+            Tools::getValue('query') != ''
+        ) {
             $queryArray['query'] = Tools::getValue('query');
         }
 
-        if (Tools::getIsset('metadata') && Tools::getValue('metadata') != '') {
+        if (Tools::getIsset('metadata') &&
+            Tools::getValue('metadata') != ''
+        ) {
             $queryArray['metadata'] = Tools::getValue('metadata');
         }
 
-        if (Tools::getIsset('idWarehouse') && Tools::getValue('idWarehouse') != '') {
+        if (Tools::getIsset('idWarehouse') &&
+            Tools::getValue('idWarehouse') != ''
+        ) {
             $queryArray['idWarehouse'] = Tools::getValue('idWarehouse');
         }
 
@@ -119,7 +143,12 @@ class MtsAlegraApiProductConsultMultipleModuleFrontController extends ModuleFron
             $productList = json_decode($jsonRequest, true);
             $this->context->smarty->assign('productList', $productList);
         }
-        $this->context->smarty->assign('backLink', $this->context->link->getModuleLink('mtsalegraapi', 'home', array(), Configuration::get('PS_SSL_ENABLED')));
+        $this->context->smarty->assign('backLink', $this->context->link->getModuleLink(
+            'mtsalegraapi',
+            'home',
+            array(),
+            Configuration::get('PS_SSL_ENABLED')
+        ));
         $this->setTemplate('products/consultMultiple.tpl');
     }
 }

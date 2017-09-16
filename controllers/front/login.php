@@ -39,15 +39,27 @@ class MtsAlegraApiLoginModuleFrontController extends ModuleFrontController
 
         $cookie = new Cookie('session');
 
-        if (Tools::getValue('user') == Configuration::get('mts_AlgApi_User') && password_verify(Tools::getValue('password'), Configuration::get('mts_AlgApi_Password'))) {
+        if (Tools::getValue('user') == Configuration::get('mts_AlgApi_User') &&
+            password_verify(Tools::getValue('password'), Configuration::get('mts_AlgApi_Password'))
+        ) {
             $cookie->auth = true;
-            Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'home', array(), Configuration::get('PS_SSL_ENABLED')));
+            Tools::redirect($this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'home',
+                array(),
+                Configuration::get('PS_SSL_ENABLED')
+            ));
         } else {
             $cookie->auth = false;
             $this->context->smarty->assign('error', 'Ingrese un usuario y/o contraseña.');
         }
 
-        $url = $this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED'));
+        $url = $this->context->link->getModuleLink(
+            'mtsalegraapi',
+            'login',
+            array(),
+            Configuration::get('PS_SSL_ENABLED')
+        );
         $this->context->smarty->assign('urlForm', $url);
         $this->setTemplate('login.tpl');
     }

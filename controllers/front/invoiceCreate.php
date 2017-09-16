@@ -41,7 +41,12 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
         $cookie = new Cookie('session');
 
         if ($cookie->auth != true) {
-            Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED')));
+            Tools::redirect($this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'login',
+                array(),
+                Configuration::get('PS_SSL_ENABLED')
+            ));
         }
 
         /**
@@ -51,7 +56,9 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
          * Otherwise, this module will not work properly.
          */
 
-        $authToken = base64_encode(Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token'));
+        $authToken = base64_encode(
+            Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token')
+        );
 
         /**
          * https://app.alegra.com/api/v1/invoices/<id_invoice>
@@ -104,7 +111,12 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
         $this->context->smarty->assign('invoice', $invoice);
 
 
-        $this->context->smarty->assign('backLink', $this->context->link->getModuleLink('mtsalegraapi', 'home', array(), Configuration::get('PS_SSL_ENABLED')));
+        $this->context->smarty->assign('backLink', $this->context->link->getModuleLink(
+            'mtsalegraapi',
+            'home',
+            array(),
+            Configuration::get('PS_SSL_ENABLED')
+        ));
         $this->setTemplate('invoices/consultOne.tpl');
     }
 }

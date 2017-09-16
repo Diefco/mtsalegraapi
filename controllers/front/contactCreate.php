@@ -63,7 +63,8 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         $limitQuery = Configuration::get('mts_AlgApi_limitQuery');
 
         $mtsSql = new DbQuery();
-        $mtsSql->select('id_contact_store')
+        $mtsSql
+            ->select('id_contact_store')
             ->from('mtsalegraapi_contacts')
             ->limit('1')
             ->orderBy('id_contact_store');
@@ -71,7 +72,8 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
 
         if (count($mts_contact) == 0) {
             $storeSql = new DbQuery();
-            $storeSql->select('id_customer, firstname, lastname, email')
+            $storeSql
+                ->select('id_customer, firstname, lastname, email')
                 ->from('customer')
                 ->limit('1')
                 ->orderBy('id_customer');
@@ -93,7 +95,8 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         }
 
         $mtsQuery = new DbQuery();
-        $mtsQuery->select('id_customer')
+        $mtsQuery
+            ->select('id_customer')
             ->from('customer')
             ->leftJoin(
                 'mtsalegraapi_contacts',
@@ -116,21 +119,18 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
             //  Requesting necessary customer information
             $customerInfoQuery = new DbQuery();
             $customerInfoQuery
-                ->select(
-                    'id_customer, 
-                    firstname, 
-                    lastname, 
-                    email, 
-                    company, 
-                    date_upd'
-                )
+                ->select('id_customer, firstname, lastname, email, company, date_upd')
                 ->from('customer')
                 ->where('id_customer=' . $valueInfo['id_customer']);
             $customerInfo = Db::getInstance()->executeS($customerInfoQuery);
 
             //  Requesting necessary customer address
             $customerAddressQuery = new DbQuery();
-            $customerAddressQuery->select('dni, phone, phone_mobile, alias, company, address1, address2, city, id_country, id_state, date_upd')
+            $customerAddressQuery
+                ->select(
+                    'dni, phone, phone_mobile, alias, company, 
+                    address1, address2, city, id_country, id_state, date_upd'
+                )
                 ->from('address')
                 ->where('id_customer=' . $valueInfo['id_customer']);
             $customerAddress = Db::getInstance()->executeS($customerAddressQuery);
@@ -204,35 +204,59 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         for ($i = 0; $i < count($idCustomersList); $i++) {
             if (Tools::getIsset('customer_' . $idCustomersList[$i] . '_check')) {
                 $confirmValues = array();
-                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_name') || Tools::getValue('contact_' . $idCustomersList[$i] . '_name') === false || Tools::getValue('contact_' . $idCustomersList[$i] . '_name') == null) {
+                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_name') ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_name') === false ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_name') == null
+                ) {
                     $confirmValues[] = 'name';
                 }
 
-                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_email') || Tools::getValue('contact_' . $idCustomersList[$i] . '_email') === false || Tools::getValue('contact_' . $idCustomersList[$i] . '_email') == null) {
+                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_email') ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_email') === false ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_email') == null
+                ) {
                     $confirmValues[] = 'email';
                 }
 
-                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_alias') || Tools::getValue('contact_' . $idCustomersList[$i] . '_alias') === false || Tools::getValue('contact_' . $idCustomersList[$i] . '_alias') == null) {
+                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_alias') ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_alias') === false ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_alias') == null
+                ) {
                     $confirmValues[] = 'alias';
                 }
 
-                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_dni') || Tools::getValue('contact_' . $idCustomersList[$i] . '_dni') === false || Tools::getValue('contact_' . $idCustomersList[$i] . '_dni') == null) {
+                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_dni') ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_dni') === false ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_dni') == null
+                ) {
                     $confirmValues[] = 'dni';
                 }
 
-                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_phone') || Tools::getValue('contact_' . $idCustomersList[$i] . '_phone') === false || Tools::getValue('contact_' . $idCustomersList[$i] . '_phone') == null) {
+                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_phone') ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_phone') === false ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_phone') == null
+                ) {
                     $confirmValues[] = 'phone';
                 }
 
-                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_phone_mobile') || Tools::getValue('contact_' . $idCustomersList[$i] . '_phone_mobile') === false || Tools::getValue('contact_' . $idCustomersList[$i] . '_phone_mobile') == null) {
+                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_phone_mobile') ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_phone_mobile') === false ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_phone_mobile') == null
+                ) {
                     $confirmValues[] = 'phone_mobile';
                 }
 
-                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_address') || Tools::getValue('contact_' . $idCustomersList[$i] . '_address') === false || Tools::getValue('contact_' . $idCustomersList[$i] . '_address') == null) {
+                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_address') ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_address') === false ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_address') == null
+                ) {
                     $confirmValues[] = 'address';
                 }
 
-                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_location') || Tools::getValue('contact_' . $idCustomersList[$i] . '_location') === false || Tools::getValue('contact_' . $idCustomersList[$i] . '_location') == null) {
+                if (!Tools::getIsset('contact_' . $idCustomersList[$i] . '_location') ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_location') === false ||
+                    Tools::getValue('contact_' . $idCustomersList[$i] . '_location') == null
+                ) {
                     $confirmValues[] = 'location';
                 }
 
@@ -292,12 +316,22 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         }
 
         if (!empty($sentInfo) && $sentInfo) {
-            Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'contactCreate', array(), Configuration::get('PS_SSL_ENABLED')));
+            Tools::redirect($this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'contactCreate',
+                array(),
+                Configuration::get('PS_SSL_ENABLED')
+            ));
         }
 
 //        $this->context->smarty->assign('sentInfo', $sentInfo);
         $this->context->smarty->assign('customers', $customersArray);
-        $this->context->smarty->assign('backLink', $this->context->link->getModuleLink('mtsalegraapi', 'home', array(), Configuration::get('PS_SSL_ENABLED')));
+        $this->context->smarty->assign('backLink', $this->context->link->getModuleLink(
+            'mtsalegraapi',
+            'home',
+            array(),
+            Configuration::get('PS_SSL_ENABLED')
+        ));
         $this->setTemplate('contacts/create.tpl');
     }
 

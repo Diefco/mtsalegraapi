@@ -41,7 +41,12 @@ class MtsAlegraApiContactDeleteModuleFrontController extends ModuleFrontControll
         $cookie = new Cookie('session');
 
         if ($cookie->auth != true) {
-            Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED')));
+            Tools::redirect($this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'login',
+                array(),
+                Configuration::get('PS_SSL_ENABLED')
+            ));
         }
 
         /**
@@ -51,7 +56,9 @@ class MtsAlegraApiContactDeleteModuleFrontController extends ModuleFrontControll
          * Otherwise, this module will not work properly.
          */
 
-        $authToken = base64_encode(Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token'));
+        $authToken = base64_encode(
+            Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token')
+        );
 
         die('ContactDelete');
     }

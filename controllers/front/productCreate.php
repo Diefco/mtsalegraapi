@@ -41,7 +41,12 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         $cookie = new Cookie('session');
 
         if ($cookie->auth != true) {
-            Tools::redirect($this->context->link->getModuleLink('mtsalegraapi', 'login', array(), Configuration::get('PS_SSL_ENABLED')));
+            Tools::redirect($this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'login',
+                array(),
+                Configuration::get('PS_SSL_ENABLED')
+            ));
         }
 
         /**
@@ -51,7 +56,9 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
          * Otherwise, this module will not work properly.
          */
 
-        $authToken = base64_encode(Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token'));
+        $authToken = base64_encode(
+            Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token')
+        );
 
         $limitQuery = Configuration::get('mts_AlgApi_limitQuery');
 
@@ -94,8 +101,15 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         $sql = new DbQuery();
         $sql->select('id_product, reference, id_tax_rules_group')
             ->from('product')
-            ->leftJoin('mtsalegraapi_products', null, 'ps_product.id_product = ps_mtsalegraapi_products.id_product_store')
-            ->where('ps_mtsalegraapi_products.id_product_alegra is NULL || ps_mtsalegraapi_products.product_ignored is NULL ')
+            ->leftJoin(
+                'mtsalegraapi_products',
+                null,
+                'ps_product.id_product = ps_mtsalegraapi_products.id_product_store'
+            )
+            ->where(
+                'ps_mtsalegraapi_products.id_product_alegra is NULL || 
+                ps_mtsalegraapi_products.product_ignored is NULL'
+            )
             ->limit($limitQuery)
             ->orderBy('id_product');
         $mts_join = Db::getInstance()->executeS($sql);
@@ -192,29 +206,62 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                 ->where('id_tax_rules_group = ' . $product['id_tax_rules_group']);
             $taxRulesArray = Db::getInstance()->executeS($sql);
 
-            if (count($taxRulesArray) != 1 || ($taxRulesArray[0]['behavior'] != 0 || $taxRulesArray[0]['behavior'] != '0')) {
+            if (count($taxRulesArray) != 1 || (
+                    $taxRulesArray[0]['behavior'] != 0 || $taxRulesArray[0]['behavior'] != '0'
+                )
+            ) {
                 $taxException = true;
             } else {
                 $taxException = false;
             }
 
-            $productsArray[$product['id_product']]['name'] = filter_var(strip_tags($descriptionArray[0]['name']), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES);
-            $productsArray[$product['id_product']]['description'] = filter_var(strip_tags($descriptionArray[0]['description_short']), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES);
-            $productsArray[$product['id_product']]['reference'] = filter_var(strip_tags($mts_join[$indexProduct]['reference']), FILTER_SANITIZE_FULL_SPECIAL_CHARS, FILTER_FLAG_NO_ENCODE_QUOTES);
-            $productsArray[$product['id_product']]['inventory']['unitCost'] = filter_var($priceArray[0]['wholesale_price'], FILTER_VALIDATE_FLOAT);
-            $productsArray[$product['id_product']]['inventory']['initialQuantity'] = filter_var($quantityArray[0]['quantity'], FILTER_VALIDATE_INT);
+            $productsArray[$product['id_product']]['name'] = filter_var(
+                strip_tags($descriptionArray[0]['name']),
+                FILTER_SANITIZE_FULL_SPECIAL_CHARS,
+                FILTER_FLAG_NO_ENCODE_QUOTES
+            );
+            $productsArray[$product['id_product']]['description'] = filter_var(
+                strip_tags($descriptionArray[0]['description_short']),
+                FILTER_SANITIZE_FULL_SPECIAL_CHARS,
+                FILTER_FLAG_NO_ENCODE_QUOTES
+            );
+            $productsArray[$product['id_product']]['reference'] = filter_var(
+                strip_tags($mts_join[$indexProduct]['reference']),
+                FILTER_SANITIZE_FULL_SPECIAL_CHARS,
+                FILTER_FLAG_NO_ENCODE_QUOTES
+            );
+            $productsArray[$product['id_product']]['inventory']['unitCost'] = filter_var(
+                $priceArray[0]['wholesale_price'],
+                FILTER_VALIDATE_FLOAT
+            );
+            $productsArray[$product['id_product']]['inventory']['initialQuantity'] = filter_var(
+                $quantityArray[0]['quantity'],
+                FILTER_VALIDATE_INT
+            );
 
             if (!$taxException) {
                 foreach ($relatedTaxes as $indexRelatedTax => $relatedTax) {
                     if ($taxRulesArray[0]['id_tax'] == $relatedTax['id_tax_store']) {
-                        $productsArray[$product['id_product']]['tax']['alegra'] = filter_var($relatedTax['id_tax_alegra'], FILTER_VALIDATE_INT);
-                        $productsArray[$product['id_product']]['tax']['store'] = filter_var($relatedTax['id_tax_store'], FILTER_VALIDATE_INT);
-                        $productsArray[$product['id_product']]['tax']['value'] = filter_var($relatedTax['tax_value'], FILTER_VALIDATE_INT);
+                        $productsArray[$product['id_product']]['tax']['alegra'] = filter_var(
+                            $relatedTax['id_tax_alegra'],
+                            FILTER_VALIDATE_INT
+                        );
+                        $productsArray[$product['id_product']]['tax']['store'] = filter_var(
+                            $relatedTax['id_tax_store'],
+                            FILTER_VALIDATE_INT
+                        );
+                        $productsArray[$product['id_product']]['tax']['value'] = filter_var(
+                            $relatedTax['tax_value'],
+                            FILTER_VALIDATE_INT
+                        );
                         $productsArray[$product['id_product']]['tax']['name'] = $relatedTax['tax_name'];
                     }
                 }
             }
-            $productsArray[$product['id_product']]['price'] = filter_var($priceArray[0]['price'], FILTER_VALIDATE_FLOAT);
+            $productsArray[$product['id_product']]['price'] = filter_var(
+                $priceArray[0]['price'],
+                FILTER_VALIDATE_FLOAT
+            );
         }
 
 
@@ -225,7 +272,12 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
 //        $sentInfo = $this->sendToApi($authToken, 'items', 'post', $postValues);
 
         $this->context->smarty->assign('products', $productsArray);
-        $this->context->smarty->assign('backLink', $this->context->link->getModuleLink('mtsalegraapi', 'home', array(), Configuration::get('PS_SSL_ENABLED')));
+        $this->context->smarty->assign('backLink', $this->context->link->getModuleLink(
+            'mtsalegraapi',
+            'home',
+            array(),
+            Configuration::get('PS_SSL_ENABLED')
+        ));
         $this->setTemplate('products/create.tpl');
     }
 
@@ -287,7 +339,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
             'categories',       // Categories
             'sellers',          // Sellers
             'price-lists',      // Price Lists
-            'warehouses',       // Warehouses or Storages
+            'warehouses',       // Warehouses or Storage
         );
 
         $validatedUrl = false;
@@ -324,7 +376,11 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
 
         $requestData = json_decode($requestExec, true);
 
-        if ($requestData == null || gettype($requestData) != 'array' || array_key_exists('code', $requestData) || array_key_exists('error', $requestData)) {
+        if ($requestData == null ||
+            gettype($requestData) != 'array' ||
+            array_key_exists('code', $requestData) ||
+            array_key_exists('error', $requestData)
+        ) {
             return false;
         }
         return $requestData;
