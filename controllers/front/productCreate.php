@@ -267,7 +267,13 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         $postValues = Tools::getAllValues();
 
         if (count($postValues) > 3) {
-            $this->validatePostValues($postValues, array_keys($productsArray));
+            $apiResponse = $this->validatePostValues(array_keys($productsArray), $authToken);
+
+            foreach ($apiResponse as $response) {
+                if (gettype($response) == 'array') {
+                    $this->printer($response, __LINE__, false);
+                }
+            }
         }
 
         $this->context->smarty->assign('products', $productsArray);
@@ -280,72 +286,79 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         $this->setTemplate('products/create.tpl');
     }
 
-    private function validatePostValues($postValues, $productsKeys)
+    private function validatePostValues($productsKeys, $authToken)
     {
         $productToSend = array();
+        $respuesta = array();
 
         foreach ($productsKeys as $idProduct) {
-            $productToSend[$idProduct] = array(
-                'name' => null,
-                'description' => null,
-                'reference' => null,
-                'inventory' => array(
-                    'unit' => null,
-                    'unitCost' => null,
-                    'initialQuantity' => null,
-                ),
-                'tax' => null,
-                'price' => null,
-            );
-
-            if (Tools::getIsset('customer_' . $idProduct . '_name')) {
-                $productToSend[$idProduct]['name'] =
-                    $postValues['customer_' . $idProduct . '_name'];
-            }
-
-            if (Tools::getIsset('customer_' . $idProduct . '_description')) {
-                $productToSend[$idProduct]['description'] =
-                    $postValues['customer_' . $idProduct . '_description'];
-            }
-
-            if (Tools::getIsset('customer_' . $idProduct . '_reference')) {
-                $productToSend[$idProduct]['reference'] =
-                    $postValues['customer_' . $idProduct . '_reference'];
-            }
-
-            if (Tools::getIsset('customer_' . $idProduct . '_unit')) {
-                $productToSend[$idProduct]['inventory']['unit'] = Tools::getValue(
-                    'customer_' . $idProduct . '_unit'
+            if (Tools::getIsset('customer_' . $idProduct . '_option') &&
+                Tools::getValue('customer_' . $idProduct . '_option') == 'upload'
+            ) {
+                $productToSend[$idProduct] = array(
+                    'name' => null,
+                    'description' => null,
+                    'reference' => null,
+                    'inventory' => array(
+                        'unit' => null,
+                        'unitCost' => null,
+                        'initialQuantity' => null,
+                    ),
+                    'tax' => null,
+                    'price' => null,
                 );
-            }
 
-            if (Tools::getIsset('customer_' . $idProduct . '_unitCost')) {
-                $productToSend[$idProduct]['inventory']['unitCost'] = (float)Tools::getValue(
-                    'customer_' . $idProduct . '_unitCost'
-                );
-            }
+                if (Tools::getIsset('customer_' . $idProduct . '_name')) {
+                    $productToSend[$idProduct]['name'] =
+                        Tools::getValue('customer_' . $idProduct . '_name');
+                }
 
-            if (Tools::getIsset('customer_' . $idProduct . '_initialQuantity')) {
-                $productToSend[$idProduct]['inventory']['initialQuantity'] = (int)Tools::getValue(
-                    'customer_' . $idProduct . '_initialQuantity'
-                );
-            }
+                if (Tools::getIsset('customer_' . $idProduct . '_description')) {
+                    $productToSend[$idProduct]['description'] =
+                        Tools::getValue('customer_' . $idProduct . '_description');
+                }
 
-            if (Tools::getIsset('customer_' . $idProduct . '_tax')) {
-                $productToSend[$idProduct]['tax'] = (int)Tools::getValue(
-                    'customer_' . $idProduct . '_tax'
-                );
-            }
+                if (Tools::getIsset('customer_' . $idProduct . '_reference')) {
+                    $productToSend[$idProduct]['reference'] =
+                        Tools::getValue('customer_' . $idProduct . '_reference');
+                }
 
-            if (Tools::getIsset('customer_' . $idProduct . '_price')) {
-                $productToSend[$idProduct]['price'] = (float)Tools::getValue(
-                    'customer_' . $idProduct . '_price'
-                );
+                if (Tools::getIsset('customer_' . $idProduct . '_unit')) {
+                    $productToSend[$idProduct]['inventory']['unit'] =
+                        Tools::getValue('customer_' . $idProduct . '_unit');
+                }
+
+                if (Tools::getIsset('customer_' . $idProduct . '_unitCost')) {
+                    $productToSend[$idProduct]['inventory']['unitCost'] =
+                        (int)Tools::getValue('customer_' . $idProduct . '_unitCost');
+                }
+
+                if (Tools::getIsset('customer_' . $idProduct . '_initialQuantity')) {
+                    $productToSend[$idProduct]['inventory']['initialQuantity'] =
+                        (int)Tools::getValue('customer_' . $idProduct . '_initialQuantity');
+                }
+
+                if (Tools::getIsset('customer_' . $idProduct . '_tax')) {
+                    $productToSend[$idProduct]['tax'] =
+                        (int)Tools::getValue('customer_' . $idProduct . '_tax');
+                }
+
+                if (Tools::getIsset('customer_' . $idProduct . '_price')) {
+                    $productToSend[$idProduct]['price'] =
+                        (int)Tools::getValue('customer_' . $idProduct . '_price');
+                }
+
+                $respuesta[$idProduct] = $this->sendToApi($authToken, 'items', 'post', $productToSend[$idProduct]);
+
+            } elseif (Tools::getIsset('customer_' . $idProduct . '_option') &&
+                Tools::getValue('customer_' . $idProduct . '_option') == 'ignore'
+            ) {
+                $respuesta[$idProduct] = 'ignored';
+            } else {
+                $respuesta[$idProduct] = false;
             }
         }
-
-        $this->printer($productToSend, __LINE__, false);
-        $this->printer($postValues, __LINE__, false);
+        return $respuesta;
     }
 
     private function sendToApi($authToken, $url, $method, $request = null)
@@ -420,10 +433,14 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         return $requestData;
     }
 
-    public function printer($var, $line = false, $die = true)
+    public function printer($var, $line = false, $die = true, $debug = false)
     {
         echo "<pre>";
-        print_r($var);
+        if ($debug) {
+            var_dump($var);
+        } else {
+            print_r($var);
+        }
         if ($line) {
             print_r("<br>" .gettype($var) . ' en la línea ' . $line);
         }

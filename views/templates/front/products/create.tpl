@@ -70,10 +70,12 @@
                     {foreach from=$products key=idProduct item=product}
                         <tr>
                             <td>
-                                <input type="checkbox" name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_check">
+                                <input type="radio" name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_option"
+                                       value="upload">
                             </td>
                             <td>
-                                <input type="checkbox" name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_ignore">
+                                <input type="radio" name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_option"
+                                       value="ignore">
                             </td>
                             <td>
                                 {$product.name|escape:'htmlall':'UTF-8'}
@@ -110,7 +112,7 @@
                                     <option value="meterSquared">{l s='Metro Cuadrado' mod='mtsalegraapi'}</option>
                                     <option value="inchSquared">{l s='Pulgada Cuadrada' mod='mtsalegraapi'}</option>
                                     <option value="liter">{l s='Litro' mod='mtsalegraapi'}</option>
-                                    <option value="gallon">{l s='Galon' mod='mtsalegraapi'}</option>
+                                    <option value="gallon">{l s='Galón' mod='mtsalegraapi'}</option>
                                     <option value="gram">{l s='Gramo' mod='mtsalegraapi'}</option>
                                     <option value="kilogram">{l s='Kilogramo' mod='mtsalegraapi'}</option>
                                     <option value="ton">{l s='Tonelada' mod='mtsalegraapi'}</option>
