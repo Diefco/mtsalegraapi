@@ -22,6 +22,8 @@
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
+
+<h1>HOLA</h1>
 {capture name=path}
     {if !isset($email_create)}{l s='Authentication'}{else}
         <a href="{$link->getPageLink('authentication', true)|escape:'html':'UTF-8'}" rel="nofollow"
@@ -153,10 +155,10 @@
                     </div>
                     <div class="required form-group">
                         <label for="">{l s='Tipo de entidad' mod='mtsalegraapi'} <sup>*</sup></label>
-                        <input type="radio" name="legal_type_customer" value="PN"
-                               {if isset($smarty.post.legal_type_customer) && $smarty.post.legal_type_customer == 'PN'}checked{/if}>{l s='Persona Natural' mod='mtsalegraapi'}
-                        <input type="radio" name="legal_type_customer" value="PJ"
-                               {if isset($smarty.post.legal_type_customer) && $smarty.post.legal_type_customer == 'PJ'}checked{/if}>{l s='Persona Jurídica' mod='mtsalegraapi'}
+                        <input type="radio" name="legal_type" value="PN"
+                               {if isset($smarty.post.legal_type) && $smarty.post.legal_type == 'PN'}checked{/if}>{l s='Persona Natural' mod='mtsalegraapi'}
+                        <input type="radio" name="legal_type" value="PJ"
+                               {if isset($smarty.post.legal_type) && $smarty.post.legal_type == 'PJ'}checked{/if}>{l s='Persona Jurídica' mod='mtsalegraapi'}
                     </div>
                     <div class="required form-group">
                         <label for="dni_type">{l s='Tipo de documento'} <sup>*</sup></label>
@@ -181,6 +183,12 @@
                             <option value="DE"
                                     {if isset($smarty.post.dni_type) && $smarty.post.dni_type == 'DE'}selected{/if}>{l s='DE' mod='mtsalegraapi'}</option>
                         </select>
+                    </div>
+                    <div class="required form-group">
+                        <label for="dni_number">{l s='Número de DNI'} <sup>*</sup></label>
+                        <input type="text" class="is_required validate form-control" data-validate="isName"
+                               id="dni_number" name="dni_number"
+                               value="{if isset($smarty.post.dni_number)}{$smarty.post.dni_number}{/if}"/>
                     </div>
                     <div class="form-group date-select">
                         <label>{l s='Date of Birth'}</label>
