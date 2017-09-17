@@ -114,7 +114,6 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
             ->orderBy('id_product');
         $mts_join = Db::getInstance()->executeS($sql);
 
-        $productsArray = array();
 
         // Get the list with all taxes registered in the Store
         $sql = new DbQuery();
@@ -138,6 +137,8 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         }
 
         $taxesAlegraArray = $this->sendToApi($authToken, 'taxes', 'get', null);
+
+        $productsArray = array();
 
         if ($taxesAlegraArray[0]) {
             $relatedTaxes = array();
@@ -271,43 +272,40 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                 $apiResponse = $this->validatePostValues(array_keys($productsArray), $authToken);
 
                 foreach ($apiResponse as $idProduct => $response) {
+                    $this->printer($response, false, false);
                     if (gettype($response) == 'array') {
                         // Errores o respuesta de la API
-                        if (!$response[0]) {
+                        if ($response[0] == false) {
                             $this->context->smarty->assign(
                                 'errorMsg',
                                 $response[1]['message'] . '. ID Product: ' . $idProduct
                             );
                         } else {
-                            $products[] = array(
+                            $products = array(
                                 'id_product_store' => $idProduct,
                                 'id_product_alegra' => $response[1]['id'],
-                                'product_ignored' => true
+                                'product_ignored' => false
                             );
                             Db::getInstance()->insert('mtsalegraapi_products', $products);
-                            Tools::redirect($this->context->link->getModuleLink(
-                                'mtsalegraapi',
-                                'productCreate',
-                                array(),
-                                Configuration::get('PS_SSL_ENABLED')
-                            ));
                         }
                     } elseif (gettype($response) == 'string' && $response == 'ignored') {
                         // Ignorar producto
-                        $products[] = array(
+                        $products = array(
                             'id_product_store' => $idProduct,
                             'id_product_alegra' => 0,
-                            'product_ignored' => false
+                            'product_ignored' => true
                         );
                         Db::getInstance()->insert('mtsalegraapi_products', $products);
-                        Tools::redirect($this->context->link->getModuleLink(
-                            'mtsalegraapi',
-                            'productCreate',
-                            array(),
-                            Configuration::get('PS_SSL_ENABLED')
-                        ));
+                    } else {
+                        $this->context->smarty->assign('errorMsg', 'No se ha realizado ninguna acción.');
                     }
                 }
+                Tools::redirect($this->context->link->getModuleLink(
+                    'mtsalegraapi',
+                    'productCreate',
+                    array(),
+                    Configuration::get('PS_SSL_ENABLED')
+                ));
             }
 
             $this->context->smarty->assign('products', $productsArray);
@@ -328,8 +326,8 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         $respuesta = array();
 
         foreach ($productsKeys as $idProduct) {
-            if (Tools::getIsset('customer_' . $idProduct . '_option') &&
-                Tools::getValue('customer_' . $idProduct . '_option') == 'upload'
+            if (Tools::getIsset('product_' . $idProduct . '_option') &&
+                Tools::getValue('product_' . $idProduct . '_option') == 'upload'
             ) {
                 $productToSend[$idProduct] = array(
                     'name' => null,
@@ -344,49 +342,49 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                     'price' => null,
                 );
 
-                if (Tools::getIsset('customer_' . $idProduct . '_name')) {
+                if (Tools::getIsset('product_' . $idProduct . '_name')) {
                     $productToSend[$idProduct]['name'] =
-                        Tools::getValue('customer_' . $idProduct . '_name');
+                        Tools::getValue('product_' . $idProduct . '_name');
                 }
 
-                if (Tools::getIsset('customer_' . $idProduct . '_description')) {
+                if (Tools::getIsset('product_' . $idProduct . '_description')) {
                     $productToSend[$idProduct]['description'] =
-                        Tools::getValue('customer_' . $idProduct . '_description');
+                        Tools::getValue('product_' . $idProduct . '_description');
                 }
 
-                if (Tools::getIsset('customer_' . $idProduct . '_reference')) {
+                if (Tools::getIsset('product_' . $idProduct . '_reference')) {
                     $productToSend[$idProduct]['reference'] =
-                        Tools::getValue('customer_' . $idProduct . '_reference');
+                        Tools::getValue('product_' . $idProduct . '_reference');
                 }
 
-                if (Tools::getIsset('customer_' . $idProduct . '_unit')) {
+                if (Tools::getIsset('product_' . $idProduct . '_unit')) {
                     $productToSend[$idProduct]['inventory']['unit'] =
-                        Tools::getValue('customer_' . $idProduct . '_unit');
+                        Tools::getValue('product_' . $idProduct . '_unit');
                 }
 
-                if (Tools::getIsset('customer_' . $idProduct . '_unitCost')) {
+                if (Tools::getIsset('product_' . $idProduct . '_unitCost')) {
                     $productToSend[$idProduct]['inventory']['unitCost'] =
-                        (int)Tools::getValue('customer_' . $idProduct . '_unitCost');
+                        (int)Tools::getValue('product_' . $idProduct . '_unitCost');
                 }
 
-                if (Tools::getIsset('customer_' . $idProduct . '_initialQuantity')) {
+                if (Tools::getIsset('product_' . $idProduct . '_initialQuantity')) {
                     $productToSend[$idProduct]['inventory']['initialQuantity'] =
-                        (int)Tools::getValue('customer_' . $idProduct . '_initialQuantity');
+                        (int)Tools::getValue('product_' . $idProduct . '_initialQuantity');
                 }
 
-                if (Tools::getIsset('customer_' . $idProduct . '_tax')) {
+                if (Tools::getIsset('product_' . $idProduct . '_tax')) {
                     $productToSend[$idProduct]['tax'] =
-                        (int)Tools::getValue('customer_' . $idProduct . '_tax');
+                        (int)Tools::getValue('product_' . $idProduct . '_tax');
                 }
 
-                if (Tools::getIsset('customer_' . $idProduct . '_price')) {
+                if (Tools::getIsset('product_' . $idProduct . '_price')) {
                     $productToSend[$idProduct]['price'] =
-                        (int)Tools::getValue('customer_' . $idProduct . '_price');
+                        (int)Tools::getValue('product_' . $idProduct . '_price');
                 }
 
                 $respuesta[$idProduct] = $this->sendToApi($authToken, 'items', 'post', $productToSend[$idProduct]);
-            } elseif (Tools::getIsset('customer_' . $idProduct . '_option') &&
-                Tools::getValue('customer_' . $idProduct . '_option') == 'ignore'
+            } elseif (Tools::getIsset('product_' . $idProduct . '_option') &&
+                Tools::getValue('product_' . $idProduct . '_option') == 'ignore'
             ) {
                 $respuesta[$idProduct] = 'ignored';
             } else {
@@ -483,38 +481,5 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         if ($die) {
             die();
         }
-    }
-
-    private function uniqueDataArray($array, $index, $subIndex)
-    {
-        $arrayData = array();
-        foreach ($array[$index] as $subArray) {
-            if (count($subArray) > 0) {
-                $arrayData[] = $subArray[$subIndex];
-            }
-        }
-        return $arrayData;
-    }
-
-    private function joinInlineData($metaArray)
-    {
-        $indexedArray = array();
-        $arrayKeys = array();
-        $condensed = array();
-
-        foreach ($metaArray as $keyMeta => $valueMeta) {
-            $indexedArray[$keyMeta] = count($valueMeta);
-            $arrayKeys[] = $keyMeta;
-        }
-
-        $maxArray = max($indexedArray);
-
-        for ($i = 0; $i < $maxArray; $i++) {
-            foreach ($arrayKeys as $value) {
-                $condensed[$i][$value] = $metaArray[$value][$i];
-            }
-        }
-
-        return $condensed;
     }
 }

@@ -32,7 +32,7 @@
     {$errorMsg|escape:'htmlall':'UTF-8'}
 {/if}
 
-{if isset($products) || !empty($products)}
+{if isset($products) && !empty($products)}
     <p>{l s='Seleccione los contactos que desea subir' mod='mtsalegraapi'}</p>
     <fieldset>
         <form action="" method="post" class="form-inline">
@@ -73,40 +73,40 @@
                     {foreach from=$products key=idProduct item=product}
                         <tr>
                             <td>
-                                <input type="radio" name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_option"
+                                <input type="radio" name="product_{$idProduct|escape:'htmlall':'UTF-8'}_option"
                                        value="upload">
                             </td>
                             <td>
-                                <input type="radio" name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_option"
+                                <input type="radio" name="product_{$idProduct|escape:'htmlall':'UTF-8'}_option"
                                        value="ignore">
                             </td>
                             <td>
                                 {$product.name|escape:'htmlall':'UTF-8'}
-                                <input type="hidden" id="customer_{$idProduct|escape:'htmlall':'UTF-8'}_name"
-                                       name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_name"
+                                <input type="hidden" id="product_{$idProduct|escape:'htmlall':'UTF-8'}_name"
+                                       name="product_{$idProduct|escape:'htmlall':'UTF-8'}_name"
                                        value="{$product.name|escape:'htmlall':'UTF-8'}">
                             </td>
                             <td>
                                 {$product.description|escape:'htmlall':'UTF-8'}
-                                <input type="hidden" id="customer_{$idProduct|escape:'htmlall':'UTF-8'}_description"
-                                       name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_description"
+                                <input type="hidden" id="product_{$idProduct|escape:'htmlall':'UTF-8'}_description"
+                                       name="product_{$idProduct|escape:'htmlall':'UTF-8'}_description"
                                        value="{$product.description|escape:'htmlall':'UTF-8'}">
                             </td>
                             <td>
                                 {$product.reference|escape:'htmlall':'UTF-8'}
-                                <input type="hidden" id="customer_{$idProduct|escape:'htmlall':'UTF-8'}_reference"
-                                       name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_reference"
+                                <input type="hidden" id="product_{$idProduct|escape:'htmlall':'UTF-8'}_reference"
+                                       name="product_{$idProduct|escape:'htmlall':'UTF-8'}_reference"
                                        value="{$product.reference|escape:'htmlall':'UTF-8'}">
                             </td>
                             <td>
                                 {$product.inventory.initialQuantity|number_format:0|escape:'htmlall':'UTF-8'}
-                                <input type="hidden" id="customer_{$idProduct|escape:'htmlall':'UTF-8'}_initialQuantity"
-                                       name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_initialQuantity"
+                                <input type="hidden" id="product_{$idProduct|escape:'htmlall':'UTF-8'}_initialQuantity"
+                                       name="product_{$idProduct|escape:'htmlall':'UTF-8'}_initialQuantity"
                                        value="{$product.inventory.initialQuantity|escape:'htmlall':'UTF-8'}">
                             </td>
                             <td>
-                                <select name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_unit"
-                                        id="customer_{$idProduct|escape:'htmlall':'UTF-8'}_unit">
+                                <select name="product_{$idProduct|escape:'htmlall':'UTF-8'}_unit"
+                                        id="product_{$idProduct|escape:'htmlall':'UTF-8'}_unit">
                                     <option value="unit">{l s='Unidad' mod='mtsalegraapi'}</option>
                                     <option value="centimeter">{l s='Centímetro' mod='mtsalegraapi'}</option>
                                     <option value="meter">{l s='Metro' mod='mtsalegraapi'}</option>
@@ -127,21 +127,21 @@
                             </td>
                             <td>
                                 $ {$product.inventory.unitCost|number_format:0|escape:'htmlall':'UTF-8'}
-                                <input type="hidden" id="customer_{$idProduct|escape:'htmlall':'UTF-8'}_unitCost"
-                                       name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_unitCost"
+                                <input type="hidden" id="product_{$idProduct|escape:'htmlall':'UTF-8'}_unitCost"
+                                       name="product_{$idProduct|escape:'htmlall':'UTF-8'}_unitCost"
                                        value="{$product.inventory.unitCost|escape:'htmlall':'UTF-8'}">
                             </td>
                             <td>
                                 {$product.tax.name|escape:'htmlall':'UTF-8'}
                                 : {$product.tax.value|number_format:0|escape:'htmlall':'UTF-8'}%
-                                <input type="hidden" id="customer_{$idProduct|escape:'htmlall':'UTF-8'}_tax"
-                                       name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_tax"
+                                <input type="hidden" id="product_{$idProduct|escape:'htmlall':'UTF-8'}_tax"
+                                       name="product_{$idProduct|escape:'htmlall':'UTF-8'}_tax"
                                        value="{$product.tax.alegra|escape:'htmlall':'UTF-8'}">
                             </td>
                             <td>
                                 $ {$product.price|number_format:0|escape:'htmlall':'UTF-8'}
-                                <input type="hidden" id="customer_{$idProduct|escape:'htmlall':'UTF-8'}_price"
-                                       name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_price"
+                                <input type="hidden" id="product_{$idProduct|escape:'htmlall':'UTF-8'}_price"
+                                       name="product_{$idProduct|escape:'htmlall':'UTF-8'}_price"
                                        value="{$product.price|escape:'htmlall':'UTF-8'}">
                             </td>
                         </tr>
@@ -155,7 +155,7 @@
         </form>
     </fieldset>
 {else}
-    <h2>{l s='Ningún contacto para subir' mod='mtsalegraapi'}</h2>
+    <h2>{l s='Ningún producto para subir' mod='mtsalegraapi'}</h2>
 {/if}
 <br>
 <a class="btn btn-primary" href="{$backLink|escape:'htmlall':'UTF-8'}">Volver</a>
