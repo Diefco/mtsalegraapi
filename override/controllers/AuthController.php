@@ -266,20 +266,120 @@ class AuthControllerCore extends FrontController
     }
 
     /**
-     * Process submit on a creation
+     * Process login
      */
-    protected function processSubmitCreate()
+    protected function processSubmitLogin()
     {
-        if (!Validate::isEmail($email = trim(Tools::getValue('email_create'))) || empty($email)) {
+        Hook::exec('actionBeforeAuthentication');
+        $passwd = trim(Tools::getValue('passwd'));
+        $_POST['passwd'] = null;
+        $email = trim(Tools::getValue('email'));
+        if (empty($email)) {
+            $this->errors[] = Tools::displayError('An email address required.');
+        } elseif (!Validate::isEmail($email)) {
             $this->errors[] = Tools::displayError('Invalid email address.');
-        } elseif (Customer::customerExists($email)) {
-            $this->errors[] = Tools::displayError('An account using this email address has already been registered. Please enter a valid password or request a new one. ', false);
-            $_POST['email'] = trim(Tools::getValue('email_create'));
-            unset($_POST['email_create']);
+        } elseif (empty($passwd)) {
+            $this->errors[] = Tools::displayError('Password is required.');
+        } elseif (!Validate::isPasswd($passwd)) {
+            $this->errors[] = Tools::displayError('Invalid password.');
         } else {
-            $this->create_account = true;
-            $this->context->smarty->assign('email_create', Tools::safeOutput($email));
-            $_POST['email'] = $email;
+            $customer = new Customer();
+            $authentication = $customer->getByEmail(trim($email), trim($passwd));
+            if (isset($authentication->active) && !$authentication->active) {
+                $this->errors[] = Tools::displayError('Your account isn\'t available at this time, please contact us');
+            } elseif (!$authentication || !$customer->id) {
+                $this->errors[] = Tools::displayError('Authentication failed.');
+            } else {
+                $this->context->cookie->id_compare = isset($this->context->cookie->id_compare) ? $this->context->cookie->id_compare : CompareProduct::getIdCompareByIdCustomer($customer->id);
+                $this->context->cookie->id_customer = (int)($customer->id);
+                $this->context->cookie->customer_lastname = $customer->lastname;
+                $this->context->cookie->customer_firstname = $customer->firstname;
+                $this->context->cookie->logged = 1;
+                $customer->logged = 1;
+                $this->context->cookie->is_guest = $customer->isGuest();
+                $this->context->cookie->passwd = $customer->passwd;
+                $this->context->cookie->email = $customer->email;
+
+                // Add customer to the context
+                $this->context->customer = $customer;
+
+                if (Configuration::get('PS_CART_FOLLOWING') && (empty($this->context->cookie->id_cart) || Cart::getNbProducts($this->context->cookie->id_cart) == 0) && $id_cart = (int)Cart::lastNoneOrderedCart($this->context->customer->id)) {
+                    $this->context->cart = new Cart($id_cart);
+                } else {
+                    $id_carrier = (int)$this->context->cart->id_carrier;
+                    $this->context->cart->id_carrier = 0;
+                    $this->context->cart->setDeliveryOption(null);
+                    $this->context->cart->id_address_delivery = (int)Address::getFirstCustomerAddressId((int)($customer->id));
+                    $this->context->cart->id_address_invoice = (int)Address::getFirstCustomerAddressId((int)($customer->id));
+                }
+                $this->context->cart->id_customer = (int)$customer->id;
+                $this->context->cart->secure_key = $customer->secure_key;
+
+                if ($this->ajax && isset($id_carrier) && $id_carrier && Configuration::get('PS_ORDER_PROCESS_TYPE')) {
+                    $delivery_option = array($this->context->cart->id_address_delivery => $id_carrier . ',');
+                    $this->context->cart->setDeliveryOption($delivery_option);
+                }
+
+                $this->context->cart->save();
+                $this->context->cookie->id_cart = (int)$this->context->cart->id;
+                $this->context->cookie->write();
+                $this->context->cart->autosetProductAddress();
+
+                Hook::exec('actionAuthentication', array('customer' => $this->context->customer));
+
+                // Login information have changed, so we check if the cart rules still apply
+                CartRule::autoRemoveFromCart($this->context);
+                CartRule::autoAddToCart($this->context);
+
+                if (!$this->ajax) {
+                    $back = Tools::getValue('back', 'my-account');
+
+                    if ($back == Tools::secureReferrer($back)) {
+                        Tools::redirect(html_entity_decode($back));
+                    }
+
+                    Tools::redirect('index.php?controller=' . (($this->authRedirection !== false) ? urlencode($this->authRedirection) : $back));
+                }
+            }
+        }
+        if ($this->ajax) {
+            $return = array(
+                'hasError' => !empty($this->errors),
+                'errors' => $this->errors,
+                'token' => Tools::getToken(false)
+            );
+            $this->ajaxDie(Tools::jsonEncode($return));
+        } else {
+            $this->context->smarty->assign('authentification_error', $this->errors);
+        }
+    }
+
+    /**
+     * Process the newsletter settings and set the customer infos.
+     *
+     * @param Customer $customer Reference on the customer Object.
+     *
+     * @note At this point, the email has been validated.
+     */
+    protected function processCustomerNewsletter(&$customer)
+    {
+        $blocknewsletter = Module::isInstalled('blocknewsletter') && $module_newsletter = Module::getInstanceByName('blocknewsletter');
+        if ($blocknewsletter && $module_newsletter->active && !Tools::getValue('newsletter')) {
+            require_once _PS_MODULE_DIR_ . 'blocknewsletter/blocknewsletter.php';
+            if (is_callable(array($module_newsletter, 'isNewsletterRegistered')) && $module_newsletter->isNewsletterRegistered(Tools::getValue('email')) == Blocknewsletter::GUEST_REGISTERED) {
+                /* Force newsletter registration as customer as already registred as guest */
+                $_POST['newsletter'] = true;
+            }
+        }
+
+        if (Tools::getValue('newsletter')) {
+            $customer->newsletter = true;
+            $customer->ip_registration_newsletter = pSQL(Tools::getRemoteAddr());
+            $customer->newsletter_date_add = pSQL(date('Y-m-d H:i:s'));
+            /** @var Blocknewsletter $module_newsletter */
+            if ($blocknewsletter && $module_newsletter->active) {
+                $module_newsletter->confirmSubscription(Tools::getValue('email'));
+            }
         }
     }
 
@@ -601,57 +701,21 @@ class AuthControllerCore extends FrontController
     }
 
     /**
-     * Process the newsletter settings and set the customer infos.
-     *
-     * @param Customer $customer Reference on the customer Object.
-     *
-     * @note At this point, the email has been validated.
+     * Process submit on a creation
      */
-    protected function processCustomerNewsletter(&$customer)
+    protected function processSubmitCreate()
     {
-        $blocknewsletter = Module::isInstalled('blocknewsletter') && $module_newsletter = Module::getInstanceByName('blocknewsletter');
-        if ($blocknewsletter && $module_newsletter->active && !Tools::getValue('newsletter')) {
-            require_once _PS_MODULE_DIR_ . 'blocknewsletter/blocknewsletter.php';
-            if (is_callable(array($module_newsletter, 'isNewsletterRegistered')) && $module_newsletter->isNewsletterRegistered(Tools::getValue('email')) == Blocknewsletter::GUEST_REGISTERED) {
-                /* Force newsletter registration as customer as already registred as guest */
-                $_POST['newsletter'] = true;
-            }
+        if (!Validate::isEmail($email = trim(Tools::getValue('email_create'))) || empty($email)) {
+            $this->errors[] = Tools::displayError('Invalid email address.');
+        } elseif (Customer::customerExists($email)) {
+            $this->errors[] = Tools::displayError('An account using this email address has already been registered. Please enter a valid password or request a new one. ', false);
+            $_POST['email'] = trim(Tools::getValue('email_create'));
+            unset($_POST['email_create']);
+        } else {
+            $this->create_account = true;
+            $this->context->smarty->assign('email_create', Tools::safeOutput($email));
+            $_POST['email'] = $email;
         }
-
-        if (Tools::getValue('newsletter')) {
-            $customer->newsletter = true;
-            $customer->ip_registration_newsletter = pSQL(Tools::getRemoteAddr());
-            $customer->newsletter_date_add = pSQL(date('Y-m-d H:i:s'));
-            /** @var Blocknewsletter $module_newsletter */
-            if ($blocknewsletter && $module_newsletter->active) {
-                $module_newsletter->confirmSubscription(Tools::getValue('email'));
-            }
-        }
-    }
-
-    /**
-     * sendConfirmationMail
-     * @param Customer $customer
-     * @return bool
-     */
-    protected function sendConfirmationMail(Customer $customer)
-    {
-        if (!Configuration::get('PS_CUSTOMER_CREATION_EMAIL')) {
-            return true;
-        }
-
-        return Mail::Send(
-            $this->context->language->id,
-            'account',
-            Mail::l('Welcome!'),
-            array(
-                '{firstname}' => $customer->firstname,
-                '{lastname}' => $customer->lastname,
-                '{email}' => $customer->email,
-                '{passwd}' => Tools::getValue('passwd')),
-            $customer->email,
-            $customer->firstname . ' ' . $customer->lastname
-        );
     }
 
     /**
@@ -679,91 +743,27 @@ class AuthControllerCore extends FrontController
     }
 
     /**
-     * Process login
+     * sendConfirmationMail
+     * @param Customer $customer
+     * @return bool
      */
-    protected function processSubmitLogin()
+    protected function sendConfirmationMail(Customer $customer)
     {
-        Hook::exec('actionBeforeAuthentication');
-        $passwd = trim(Tools::getValue('passwd'));
-        $_POST['passwd'] = null;
-        $email = trim(Tools::getValue('email'));
-        if (empty($email)) {
-            $this->errors[] = Tools::displayError('An email address required.');
-        } elseif (!Validate::isEmail($email)) {
-            $this->errors[] = Tools::displayError('Invalid email address.');
-        } elseif (empty($passwd)) {
-            $this->errors[] = Tools::displayError('Password is required.');
-        } elseif (!Validate::isPasswd($passwd)) {
-            $this->errors[] = Tools::displayError('Invalid password.');
-        } else {
-            $customer = new Customer();
-            $authentication = $customer->getByEmail(trim($email), trim($passwd));
-            if (isset($authentication->active) && !$authentication->active) {
-                $this->errors[] = Tools::displayError('Your account isn\'t available at this time, please contact us');
-            } elseif (!$authentication || !$customer->id) {
-                $this->errors[] = Tools::displayError('Authentication failed.');
-            } else {
-                $this->context->cookie->id_compare = isset($this->context->cookie->id_compare) ? $this->context->cookie->id_compare : CompareProduct::getIdCompareByIdCustomer($customer->id);
-                $this->context->cookie->id_customer = (int)($customer->id);
-                $this->context->cookie->customer_lastname = $customer->lastname;
-                $this->context->cookie->customer_firstname = $customer->firstname;
-                $this->context->cookie->logged = 1;
-                $customer->logged = 1;
-                $this->context->cookie->is_guest = $customer->isGuest();
-                $this->context->cookie->passwd = $customer->passwd;
-                $this->context->cookie->email = $customer->email;
-
-                // Add customer to the context
-                $this->context->customer = $customer;
-
-                if (Configuration::get('PS_CART_FOLLOWING') && (empty($this->context->cookie->id_cart) || Cart::getNbProducts($this->context->cookie->id_cart) == 0) && $id_cart = (int)Cart::lastNoneOrderedCart($this->context->customer->id)) {
-                    $this->context->cart = new Cart($id_cart);
-                } else {
-                    $id_carrier = (int)$this->context->cart->id_carrier;
-                    $this->context->cart->id_carrier = 0;
-                    $this->context->cart->setDeliveryOption(null);
-                    $this->context->cart->id_address_delivery = (int)Address::getFirstCustomerAddressId((int)($customer->id));
-                    $this->context->cart->id_address_invoice = (int)Address::getFirstCustomerAddressId((int)($customer->id));
-                }
-                $this->context->cart->id_customer = (int)$customer->id;
-                $this->context->cart->secure_key = $customer->secure_key;
-
-                if ($this->ajax && isset($id_carrier) && $id_carrier && Configuration::get('PS_ORDER_PROCESS_TYPE')) {
-                    $delivery_option = array($this->context->cart->id_address_delivery => $id_carrier . ',');
-                    $this->context->cart->setDeliveryOption($delivery_option);
-                }
-
-                $this->context->cart->save();
-                $this->context->cookie->id_cart = (int)$this->context->cart->id;
-                $this->context->cookie->write();
-                $this->context->cart->autosetProductAddress();
-
-                Hook::exec('actionAuthentication', array('customer' => $this->context->customer));
-
-                // Login information have changed, so we check if the cart rules still apply
-                CartRule::autoRemoveFromCart($this->context);
-                CartRule::autoAddToCart($this->context);
-
-                if (!$this->ajax) {
-                    $back = Tools::getValue('back', 'my-account');
-
-                    if ($back == Tools::secureReferrer($back)) {
-                        Tools::redirect(html_entity_decode($back));
-                    }
-
-                    Tools::redirect('index.php?controller=' . (($this->authRedirection !== false) ? urlencode($this->authRedirection) : $back));
-                }
-            }
+        if (!Configuration::get('PS_CUSTOMER_CREATION_EMAIL')) {
+            return true;
         }
-        if ($this->ajax) {
-            $return = array(
-                'hasError' => !empty($this->errors),
-                'errors' => $this->errors,
-                'token' => Tools::getToken(false)
-            );
-            $this->ajaxDie(Tools::jsonEncode($return));
-        } else {
-            $this->context->smarty->assign('authentification_error', $this->errors);
-        }
+
+        return Mail::Send(
+            $this->context->language->id,
+            'account',
+            Mail::l('Welcome!'),
+            array(
+                '{firstname}' => $customer->firstname,
+                '{lastname}' => $customer->lastname,
+                '{email}' => $customer->email,
+                '{passwd}' => Tools::getValue('passwd')),
+            $customer->email,
+            $customer->firstname . ' ' . $customer->lastname
+        );
     }
 }
