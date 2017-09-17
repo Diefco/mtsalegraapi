@@ -413,6 +413,9 @@ class AuthControllerCore extends FrontController
         $customer = new Customer();
         $lastnameAddress = Tools::getValue('lastname');
         $firstnameAddress = Tools::getValue('firstname');
+        $legalTypeCustomer = Tools::getValue('legal_type_customer');
+        $dni_type = Tools::getValue('dni_type');
+        $dni_number = Tools::getValue('dni_number');
         $_POST['lastname'] = Tools::getValue('customer_lastname', $lastnameAddress);
         $_POST['firstname'] = Tools::getValue('customer_firstname', $firstnameAddress);
         $addresses_types = array('address');
@@ -453,6 +456,9 @@ class AuthControllerCore extends FrontController
                 if (!Validate::isBirthDate($customer->birthday)) {
                     $this->errors[] = Tools::displayError('Invalid date of birth.');
                 }
+                $customer->legal_type_customer = $legalTypeCustomer;
+                $customer->dni_type = $dni_type;
+                $customer->dni_number = $dni_number;
 
                 // New Guest customer
                 $customer->is_guest = (Tools::isSubmit('is_new_customer') ? !Tools::getValue('is_new_customer', 1) : 0);
@@ -579,6 +585,9 @@ class AuthControllerCore extends FrontController
             if (!Validate::isBirthDate($customer->birthday)) {
                 $this->errors[] = Tools::displayError('Invalid date of birth');
             }
+            $customer->legal_type_customer = $legalTypeCustomer;
+            $customer->dni_type = $dni_type;
+            $customer->dni_number = $dni_number;
 
             if (!count($this->errors)) {
                 $customer->active = 1;
@@ -729,6 +738,9 @@ class AuthControllerCore extends FrontController
         $this->context->cookie->id_customer = (int)$customer->id;
         $this->context->cookie->customer_lastname = $customer->lastname;
         $this->context->cookie->customer_firstname = $customer->firstname;
+        $this->context->cookie->customer_legal_type_customer = $customer->legal_type_customer;
+        $this->context->cookie->customer_dni_type = $customer->dni_type;
+        $this->context->cookie->customer_dni_number = $customer->dni_number;
         $this->context->cookie->passwd = $customer->passwd;
         $this->context->cookie->logged = 1;
         // if register process is in two steps, we display a message to confirm account creation
