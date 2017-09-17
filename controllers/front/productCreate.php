@@ -264,12 +264,11 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
             );
         }
 
-
         $postValues = Tools::getAllValues();
 
-        $this->printer($postValues, __LINE__, false);
-
-//        $sentInfo = $this->sendToApi($authToken, 'items', 'post', $postValues);
+        if (count($postValues) > 3) {
+            $this->validatePostValues($postValues, array_keys($productsArray));
+        }
 
         $this->context->smarty->assign('products', $productsArray);
         $this->context->smarty->assign('backLink', $this->context->link->getModuleLink(
@@ -281,37 +280,72 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         $this->setTemplate('products/create.tpl');
     }
 
-    private function uniqueDataArray($array, $index, $subIndex)
+    private function validatePostValues($postValues, $productsKeys)
     {
-        $arrayData = array();
-        foreach ($array[$index] as $subArray) {
-            if (count($subArray) > 0) {
-                $arrayData[] = $subArray[$subIndex];
+        $productToSend = array();
+
+        foreach ($productsKeys as $idProduct) {
+            $productToSend[$idProduct] = array(
+                'name' => null,
+                'description' => null,
+                'reference' => null,
+                'inventory' => array(
+                    'unit' => null,
+                    'unitCost' => null,
+                    'initialQuantity' => null,
+                ),
+                'tax' => null,
+                'price' => null,
+            );
+
+            if (Tools::getIsset('customer_' . $idProduct . '_name')) {
+                $productToSend[$idProduct]['name'] =
+                    $postValues['customer_' . $idProduct . '_name'];
+            }
+
+            if (Tools::getIsset('customer_' . $idProduct . '_description')) {
+                $productToSend[$idProduct]['description'] =
+                    $postValues['customer_' . $idProduct . '_description'];
+            }
+
+            if (Tools::getIsset('customer_' . $idProduct . '_reference')) {
+                $productToSend[$idProduct]['reference'] =
+                    $postValues['customer_' . $idProduct . '_reference'];
+            }
+
+            if (Tools::getIsset('customer_' . $idProduct . '_unit')) {
+                $productToSend[$idProduct]['inventory']['unit'] = Tools::getValue(
+                    'customer_' . $idProduct . '_unit'
+                );
+            }
+
+            if (Tools::getIsset('customer_' . $idProduct . '_unitCost')) {
+                $productToSend[$idProduct]['inventory']['unitCost'] = (float)Tools::getValue(
+                    'customer_' . $idProduct . '_unitCost'
+                );
+            }
+
+            if (Tools::getIsset('customer_' . $idProduct . '_initialQuantity')) {
+                $productToSend[$idProduct]['inventory']['initialQuantity'] = (int)Tools::getValue(
+                    'customer_' . $idProduct . '_initialQuantity'
+                );
+            }
+
+            if (Tools::getIsset('customer_' . $idProduct . '_tax')) {
+                $productToSend[$idProduct]['tax'] = (int)Tools::getValue(
+                    'customer_' . $idProduct . '_tax'
+                );
+            }
+
+            if (Tools::getIsset('customer_' . $idProduct . '_price')) {
+                $productToSend[$idProduct]['price'] = (float)Tools::getValue(
+                    'customer_' . $idProduct . '_price'
+                );
             }
         }
-        return $arrayData;
-    }
 
-    private function joinInlineData($metaArray)
-    {
-        $indexedArray = array();
-        $arrayKeys = array();
-        $condensed = array();
-
-        foreach ($metaArray as $keyMeta => $valueMeta) {
-            $indexedArray[$keyMeta] = count($valueMeta);
-            $arrayKeys[] = $keyMeta;
-        }
-
-        $maxArray = max($indexedArray);
-
-        for ($i = 0; $i < $maxArray; $i++) {
-            foreach ($arrayKeys as $value) {
-                $condensed[$i][$value] = $metaArray[$value][$i];
-            }
-        }
-
-        return $condensed;
+        $this->printer($productToSend, __LINE__, false);
+        $this->printer($postValues, __LINE__, false);
     }
 
     private function sendToApi($authToken, $url, $method, $request = null)
@@ -397,5 +431,38 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         if ($die) {
             die();
         }
+    }
+
+    private function uniqueDataArray($array, $index, $subIndex)
+    {
+        $arrayData = array();
+        foreach ($array[$index] as $subArray) {
+            if (count($subArray) > 0) {
+                $arrayData[] = $subArray[$subIndex];
+            }
+        }
+        return $arrayData;
+    }
+
+    private function joinInlineData($metaArray)
+    {
+        $indexedArray = array();
+        $arrayKeys = array();
+        $condensed = array();
+
+        foreach ($metaArray as $keyMeta => $valueMeta) {
+            $indexedArray[$keyMeta] = count($valueMeta);
+            $arrayKeys[] = $keyMeta;
+        }
+
+        $maxArray = max($indexedArray);
+
+        for ($i = 0; $i < $maxArray; $i++) {
+            foreach ($arrayKeys as $value) {
+                $condensed[$i][$value] = $metaArray[$value][$i];
+            }
+        }
+
+        return $condensed;
     }
 }

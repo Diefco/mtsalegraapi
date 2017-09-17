@@ -40,6 +40,9 @@
                             {l s='Subir' mod='mtsalegraapi'}
                         </th>
                         <th>
+                            {l s='Ignorar' mod='mtsalegraapi'}
+                        </th>
+                        <th>
                             {l s='Nombre' mod='mtsalegraapi'}
                         </th>
                         <th>
@@ -67,8 +70,10 @@
                     {foreach from=$products key=idProduct item=product}
                         <tr>
                             <td>
-                                <input type="checkbox" name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_check"
-                                       value="true">
+                                <input type="checkbox" name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_check">
+                            </td>
+                            <td>
+                                <input type="checkbox" name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_ignore">
                             </td>
                             <td>
                                 {$product.name|escape:'htmlall':'UTF-8'}
@@ -129,10 +134,10 @@
                                        value="{$product.tax.alegra|escape:'htmlall':'UTF-8'}">
                             </td>
                             <td>
-                                {$product.price|number_format:0|escape:'htmlall':'UTF-8'}
-                                <input type="hidden" id="customer_{$idProduct|escape:'htmlall':'UTF-8'}_initialQuantity"
-                                       name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_initialQuantity"
-                                       value="{$product.price|number_format:0|escape:'htmlall':'UTF-8'}">
+                                $ {$product.price|number_format:0|escape:'htmlall':'UTF-8'}
+                                <input type="hidden" id="customer_{$idProduct|escape:'htmlall':'UTF-8'}_price"
+                                       name="customer_{$idProduct|escape:'htmlall':'UTF-8'}_price"
+                                       value="{$product.price|escape:'htmlall':'UTF-8'}">
                             </td>
                         </tr>
                     {/foreach}
