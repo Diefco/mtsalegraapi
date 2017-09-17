@@ -28,6 +28,9 @@
 *}
 
 <h1>{l s='Subir Productos' mod='mtsalegraapi'}</h1>
+{if isset($errorMsg)}
+    {$errorMsg|escape:'htmlall':'UTF-8'}
+{/if}
 
 {if isset($products) || !empty($products)}
     <p>{l s='Seleccione los contactos que desea subir' mod='mtsalegraapi'}</p>

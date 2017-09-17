@@ -139,144 +139,180 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
 
         $taxesAlegraArray = $this->sendToApi($authToken, 'taxes', 'get', null);
 
-        $relatedTaxes = array();
+        if ($taxesAlegraArray[0]) {
+            $relatedTaxes = array();
 
-        foreach ($taxesAlegraArray as $alegraIndex => $alegraTax) {
-            foreach ($taxesStoreArray as $storeIndex => $storeTax) {
-                $storeTaxRate = filter_var($storeTax['rate'], FILTER_VALIDATE_FLOAT);
-                $alegraTaxRate = filter_var($alegraTax['percentage'], FILTER_VALIDATE_FLOAT);
-                if (stristr($storeTax['name'], $alegraTax['name']) !== false &&
-                    $storeTaxRate == $alegraTaxRate) {
-                    $relatedTaxes[] = array(
-                        'id_tax_alegra' => $alegraTax['id'],
-                        'id_tax_store' => $storeTax['id_tax'],
-                        'tax_value' => $storeTaxRate,
-                        'tax_name' => $alegraTax['name'],
-                    );
-                }
-            }
-        }
-
-        foreach ($mts_join as $indexProduct => $product) {
-            $productsArray[$product['id_product']] = array(
-                'name' => null,
-                'description' => null,
-                'reference' => null,
-                'inventory' => array(
-                    'unit' => null,
-                    'unitCost' => null,
-                    'initialQuantity' => null,
-                ),
-                'tax' => array(
-                    'alegra' => null,
-                    'store' => null,
-                    'value' => null,
-                    'name' => null,
-                ),
-                'price' => null
-            );
-            // Get the short description for each product
-            $sql = new DbQuery();
-            $sql->select('description_short, name')
-                ->from('product_lang')
-                ->where('id_product = ' . $product['id_product'] . ' && id_lang = 1')
-                ->limit('1');
-            $descriptionArray = Db::getInstance()->executeS($sql);
-
-            // Get the price for each product (without attributes)
-            $sql = new DbQuery();
-            $sql->select('price, wholesale_price')
-                ->from('product_shop')
-                ->where('id_product = ' . $product['id_product'])
-                ->limit('1');
-            $priceArray = Db::getInstance()->executeS($sql);
-
-            // Get the quantity for each product (without attributes)
-            $sql = new DbQuery();
-            $sql->select('quantity')
-                ->from('stock_available')
-                ->where('id_product = ' . $product['id_product'])
-                ->limit('1');
-            $quantityArray = Db::getInstance()->executeS($sql);
-
-            // Get the tax rules registered in the Store
-            $sql = new DbQuery();
-            $sql->select('id_tax_rules_group, id_tax, behavior')
-                ->from('tax_rule')
-                ->where('id_tax_rules_group = ' . $product['id_tax_rules_group']);
-            $taxRulesArray = Db::getInstance()->executeS($sql);
-
-            if (count($taxRulesArray) != 1 || (
-                    $taxRulesArray[0]['behavior'] != 0 || $taxRulesArray[0]['behavior'] != '0'
-                )
-            ) {
-                $taxException = true;
-            } else {
-                $taxException = false;
-            }
-
-            $productsArray[$product['id_product']]['name'] = filter_var(
-                strip_tags($descriptionArray[0]['name']),
-                FILTER_SANITIZE_FULL_SPECIAL_CHARS,
-                FILTER_FLAG_NO_ENCODE_QUOTES
-            );
-            $productsArray[$product['id_product']]['description'] = filter_var(
-                strip_tags($descriptionArray[0]['description_short']),
-                FILTER_SANITIZE_FULL_SPECIAL_CHARS,
-                FILTER_FLAG_NO_ENCODE_QUOTES
-            );
-            $productsArray[$product['id_product']]['reference'] = filter_var(
-                strip_tags($mts_join[$indexProduct]['reference']),
-                FILTER_SANITIZE_FULL_SPECIAL_CHARS,
-                FILTER_FLAG_NO_ENCODE_QUOTES
-            );
-            $productsArray[$product['id_product']]['inventory']['unitCost'] = filter_var(
-                $priceArray[0]['wholesale_price'],
-                FILTER_VALIDATE_FLOAT
-            );
-            $productsArray[$product['id_product']]['inventory']['initialQuantity'] = filter_var(
-                $quantityArray[0]['quantity'],
-                FILTER_VALIDATE_INT
-            );
-
-            if (!$taxException) {
-                foreach ($relatedTaxes as $indexRelatedTax => $relatedTax) {
-                    if ($taxRulesArray[0]['id_tax'] == $relatedTax['id_tax_store']) {
-                        $productsArray[$product['id_product']]['tax']['alegra'] = filter_var(
-                            $relatedTax['id_tax_alegra'],
-                            FILTER_VALIDATE_INT
+            foreach ($taxesAlegraArray[1] as $alegraIndex => $alegraTax) {
+                foreach ($taxesStoreArray as $storeIndex => $storeTax) {
+                    $storeTaxRate = filter_var($storeTax['rate'], FILTER_VALIDATE_FLOAT);
+                    $alegraTaxRate = filter_var($alegraTax['percentage'], FILTER_VALIDATE_FLOAT);
+                    if (stristr($storeTax['name'], $alegraTax['name']) !== false &&
+                        $storeTaxRate == $alegraTaxRate) {
+                        $relatedTaxes[] = array(
+                            'id_tax_alegra' => $alegraTax['id'],
+                            'id_tax_store' => $storeTax['id_tax'],
+                            'tax_value' => $storeTaxRate,
+                            'tax_name' => $alegraTax['name'],
                         );
-                        $productsArray[$product['id_product']]['tax']['store'] = filter_var(
-                            $relatedTax['id_tax_store'],
-                            FILTER_VALIDATE_INT
-                        );
-                        $productsArray[$product['id_product']]['tax']['value'] = filter_var(
-                            $relatedTax['tax_value'],
-                            FILTER_VALIDATE_INT
-                        );
-                        $productsArray[$product['id_product']]['tax']['name'] = $relatedTax['tax_name'];
                     }
                 }
             }
-            $productsArray[$product['id_product']]['price'] = filter_var(
-                $priceArray[0]['price'],
-                FILTER_VALIDATE_FLOAT
-            );
-        }
 
-        $postValues = Tools::getAllValues();
+            foreach ($mts_join as $indexProduct => $product) {
+                $productsArray[$product['id_product']] = array(
+                    'name' => null,
+                    'description' => null,
+                    'reference' => null,
+                    'inventory' => array(
+                        'unit' => null,
+                        'unitCost' => null,
+                        'initialQuantity' => null,
+                    ),
+                    'tax' => array(
+                        'alegra' => null,
+                        'store' => null,
+                        'value' => null,
+                        'name' => null,
+                    ),
+                    'price' => null
+                );
+                // Get the short description for each product
+                $sql = new DbQuery();
+                $sql->select('description_short, name')
+                    ->from('product_lang')
+                    ->where('id_product = ' . $product['id_product'] . ' && id_lang = 1')
+                    ->limit('1');
+                $descriptionArray = Db::getInstance()->executeS($sql);
 
-        if (count($postValues) > 3) {
-            $apiResponse = $this->validatePostValues(array_keys($productsArray), $authToken);
+                // Get the price for each product (without attributes)
+                $sql = new DbQuery();
+                $sql->select('price, wholesale_price')
+                    ->from('product_shop')
+                    ->where('id_product = ' . $product['id_product'])
+                    ->limit('1');
+                $priceArray = Db::getInstance()->executeS($sql);
 
-            foreach ($apiResponse as $response) {
-                if (gettype($response) == 'array') {
-                    $this->printer($response, __LINE__, false);
+                // Get the quantity for each product (without attributes)
+                $sql = new DbQuery();
+                $sql->select('quantity')
+                    ->from('stock_available')
+                    ->where('id_product = ' . $product['id_product'])
+                    ->limit('1');
+                $quantityArray = Db::getInstance()->executeS($sql);
+
+                // Get the tax rules registered in the Store
+                $sql = new DbQuery();
+                $sql->select('id_tax_rules_group, id_tax, behavior')
+                    ->from('tax_rule')
+                    ->where('id_tax_rules_group = ' . $product['id_tax_rules_group']);
+                $taxRulesArray = Db::getInstance()->executeS($sql);
+
+                if (count($taxRulesArray) != 1 || (
+                        $taxRulesArray[0]['behavior'] != 0 || $taxRulesArray[0]['behavior'] != '0'
+                    )
+                ) {
+                    $taxException = true;
+                } else {
+                    $taxException = false;
+                }
+
+                $productsArray[$product['id_product']]['name'] = filter_var(
+                    strip_tags($descriptionArray[0]['name']),
+                    FILTER_SANITIZE_FULL_SPECIAL_CHARS,
+                    FILTER_FLAG_NO_ENCODE_QUOTES
+                );
+                $productsArray[$product['id_product']]['description'] = filter_var(
+                    strip_tags($descriptionArray[0]['description_short']),
+                    FILTER_SANITIZE_FULL_SPECIAL_CHARS,
+                    FILTER_FLAG_NO_ENCODE_QUOTES
+                );
+                $productsArray[$product['id_product']]['reference'] = filter_var(
+                    strip_tags($mts_join[$indexProduct]['reference']),
+                    FILTER_SANITIZE_FULL_SPECIAL_CHARS,
+                    FILTER_FLAG_NO_ENCODE_QUOTES
+                );
+                $productsArray[$product['id_product']]['inventory']['unitCost'] = filter_var(
+                    $priceArray[0]['wholesale_price'],
+                    FILTER_VALIDATE_FLOAT
+                );
+                $productsArray[$product['id_product']]['inventory']['initialQuantity'] = filter_var(
+                    $quantityArray[0]['quantity'],
+                    FILTER_VALIDATE_INT
+                );
+
+                if (!$taxException) {
+                    foreach ($relatedTaxes as $indexRelatedTax => $relatedTax) {
+                        if ($taxRulesArray[0]['id_tax'] == $relatedTax['id_tax_store']) {
+                            $productsArray[$product['id_product']]['tax']['alegra'] = filter_var(
+                                $relatedTax['id_tax_alegra'],
+                                FILTER_VALIDATE_INT
+                            );
+                            $productsArray[$product['id_product']]['tax']['store'] = filter_var(
+                                $relatedTax['id_tax_store'],
+                                FILTER_VALIDATE_INT
+                            );
+                            $productsArray[$product['id_product']]['tax']['value'] = filter_var(
+                                $relatedTax['tax_value'],
+                                FILTER_VALIDATE_INT
+                            );
+                            $productsArray[$product['id_product']]['tax']['name'] = $relatedTax['tax_name'];
+                        }
+                    }
+                }
+                $productsArray[$product['id_product']]['price'] = filter_var(
+                    $priceArray[0]['price'],
+                    FILTER_VALIDATE_FLOAT
+                );
+            }
+
+            $postValues = Tools::getAllValues();
+
+            if (count($postValues) > 3) {
+                $apiResponse = $this->validatePostValues(array_keys($productsArray), $authToken);
+
+                foreach ($apiResponse as $idProduct => $response) {
+                    if (gettype($response) == 'array') {
+                        // Errores o respuesta de la API
+                        if (!$response[0]) {
+                            $this->context->smarty->assign(
+                                'errorMsg',
+                                $response[1]['message'] . '. ID Product: ' . $idProduct
+                            );
+                        } else {
+                            $products[] = array(
+                                'id_product_store' => $idProduct,
+                                'id_product_alegra' => $response[1]['id'],
+                                'product_ignored' => true
+                            );
+                            Db::getInstance()->insert('mtsalegraapi_products', $products);
+                            Tools::redirect($this->context->link->getModuleLink(
+                                'mtsalegraapi',
+                                'productCreate',
+                                array(),
+                                Configuration::get('PS_SSL_ENABLED')
+                            ));
+                        }
+                    } elseif (gettype($response) == 'string' && $response == 'ignored') {
+                        // Ignorar producto
+                        $products[] = array(
+                            'id_product_store' => $idProduct,
+                            'id_product_alegra' => 0,
+                            'product_ignored' => false
+                        );
+                        Db::getInstance()->insert('mtsalegraapi_products', $products);
+                        Tools::redirect($this->context->link->getModuleLink(
+                            'mtsalegraapi',
+                            'productCreate',
+                            array(),
+                            Configuration::get('PS_SSL_ENABLED')
+                        ));
+                    }
                 }
             }
+
+            $this->context->smarty->assign('products', $productsArray);
         }
 
-        $this->context->smarty->assign('products', $productsArray);
         $this->context->smarty->assign('backLink', $this->context->link->getModuleLink(
             'mtsalegraapi',
             'home',
@@ -350,12 +386,13 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
 
                 $respuesta[$idProduct] = $this->sendToApi($authToken, 'items', 'post', $productToSend[$idProduct]);
 
-            } elseif (Tools::getIsset('customer_' . $idProduct . '_option') &&
+            } else
+                if (Tools::getIsset('customer_' . $idProduct . '_option') &&
                 Tools::getValue('customer_' . $idProduct . '_option') == 'ignore'
             ) {
                 $respuesta[$idProduct] = 'ignored';
             } else {
-                $respuesta[$idProduct] = false;
+                    $respuesta[$idProduct] = 'nothing';
             }
         }
         return $respuesta;
@@ -428,9 +465,9 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
             array_key_exists('code', $requestData) ||
             array_key_exists('error', $requestData)
         ) {
-            return false;
+            return array(false, $requestData);
         }
-        return $requestData;
+        return array(true, $requestData);
     }
 
     public function printer($var, $line = false, $die = true, $debug = false)
