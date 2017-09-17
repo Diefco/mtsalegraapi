@@ -385,9 +385,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                 }
 
                 $respuesta[$idProduct] = $this->sendToApi($authToken, 'items', 'post', $productToSend[$idProduct]);
-
-            } else
-                if (Tools::getIsset('customer_' . $idProduct . '_option') &&
+            } elseif (Tools::getIsset('customer_' . $idProduct . '_option') &&
                 Tools::getValue('customer_' . $idProduct . '_option') == 'ignore'
             ) {
                 $respuesta[$idProduct] = 'ignored';
