@@ -69,9 +69,9 @@ class AuthController extends AuthControllerCore
         }
         $this->addJqueryPlugin('typewatch');
         $this->addJS(array(
-            _THEME_JS_DIR_ . 'tools/vatManagement.js',
-            _THEME_JS_DIR_ . 'tools/statesManagement.js',
-            _THEME_JS_DIR_ . 'authentication.js',
+            _PS_MODULE_DIR_ . 'mtsalegraapi/views/js/tools/vatManagement.js',
+            _PS_MODULE_DIR_ . 'mtsalegraapi/views/js/tools/statesManagement.js',
+            _PS_MODULE_DIR_ . 'mtsalegraapi/views/js/authentication.js',
             _PS_JS_DIR_ . 'validate.js'
         ));
     }
@@ -153,10 +153,7 @@ class AuthController extends AuthControllerCore
         ));
 
         // Just set $this->template value here in case it's used by Ajax
-        $module_dir_override_tpl = _PS_MODULE_DIR_ . 'mtsalegraapi/views/templates/front/override/';
-        $this->context->smarty->assign('mts_dir', $module_dir_override_tpl);
-
-        $this->setTemplate($module_dir_override_tpl . 'authentication.tpl');
+        $this->setTemplate(_PS_THEME_DIR_ . 'authentication.tpl');
 
         if ($this->ajax) {
             // Call a hook to display more information on form
@@ -780,5 +777,25 @@ class AuthController extends AuthControllerCore
             $customer->email,
             $customer->firstname . ' ' . $customer->lastname
         );
+    }
+
+    public function printer($var, $die = true, $line = false, $debug = false)
+    {
+        echo "<pre>";
+        if ($debug) {
+            var_dump($var);
+        } else {
+            print_r($var);
+        }
+
+        if (!$line) {
+            echo "<br>En la linea " . $line;
+        }
+
+        if ($die) {
+            die('Fin');
+        }
+
+        echo "</pre>";
     }
 }
