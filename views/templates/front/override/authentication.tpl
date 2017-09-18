@@ -54,7 +54,7 @@
 		<div class="col-xs-12 col-sm-6">
 			<form action="{$link->getPageLink('authentication', true)|escape:'html':'UTF-8'}" method="post"
 				  id="create-account_form" class="box">
-				<h3 class="page-subheading">{l s='Create an account'}</h3>
+                <h3 class="page-subheading">{l s='Crear una cuenta' mod='mtsalegraapi'}</h3>
 				<div class="form_content clearfix">
 					<p>{l s='Por favor ingrese su correo electrónico para crear una cuenta.' mod='mtsalegraapi'}</p>
 					<div class="alert alert-danger" id="create_account_error" style="display:none"></div>
@@ -124,7 +124,7 @@
 			<div class="box">
 				<div id="opc_account_form" style="display: block; ">
 					<h3 class="page-heading bottom-indent">{l s='Instant checkout'}</h3>
-					<p class="required"><sup>*</sup>{l s='Required field'}</p>
+                    <p class="required"><sup>*</sup>{l s='Campo requerido' mod='mtsalegraapi'}</p>
 					<!-- Account -->
 					<div class="required form-group">
 						<label for="guest_email">{l s='Email address'} <sup>*</sup></label>
