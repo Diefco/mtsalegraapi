@@ -31,6 +31,25 @@
 class AuthController extends AuthControllerCore
 {
     /**
+     * Set default medias for this controller
+     * @see FrontController::setMedia()
+     */
+    public function setMedia()
+    {
+        parent::setMedia();
+        if (!$this->useMobileTheme()) {
+            $this->addCSS(_THEME_CSS_DIR_ . 'authentication.css');
+        }
+        $this->addJqueryPlugin('typewatch');
+        $this->addJS(array(
+            _PS_MODULE_DIR_ . 'modules/mtsalegraapi/views/js/tools/vatManagement.js',
+            _PS_MODULE_DIR_ . 'modules/mtsalegraapi/views/js/tools/statesManagement.js',
+            _PS_MODULE_DIR_ . 'modules/mtsalegraapi/views/js/authentication.js',
+            _PS_JS_DIR_ . 'validate.js'
+        ));
+    }
+
+    /**
      * Assign template vars related to page content
      * @see FrontController::initContent()
      */
