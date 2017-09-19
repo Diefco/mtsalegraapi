@@ -42,9 +42,9 @@ class AuthController extends AuthControllerCore
         }
         $this->addJqueryPlugin('typewatch');
         $this->addJS(array(
-            _PS_MODULE_DIR_ . 'modules/mtsalegraapi/views/js/tools/vatManagement.js',
-            _PS_MODULE_DIR_ . 'modules/mtsalegraapi/views/js/tools/statesManagement.js',
-            _PS_MODULE_DIR_ . 'modules/mtsalegraapi/views/js/authentication.js',
+            _PS_MODULE_DIR_ . 'mtsalegraapi/views/js/tools/vatManagement.js',
+            _PS_MODULE_DIR_ . 'mtsalegraapi/views/js/tools/statesManagement.js',
+            _PS_MODULE_DIR_ . 'mtsalegraapi/views/js/authentication.js',
             _PS_JS_DIR_ . 'validate.js'
         ));
     }
@@ -117,9 +117,9 @@ class AuthController extends AuthControllerCore
         ));
 
         // Just set $this->template value here in case it's used by Ajax
-//        $mts_front_templates = _PS_MODULE_DIR_ . 'mtsalegraapi/views/templates/front/';
-//        $this->context->smarty->assign('mts_dir', $mts_front_templates);
-//        $this->setTemplate($mts_front_templates . 'authentication.tpl');
+        $mts_front_templates = _PS_MODULE_DIR_ . 'mtsalegraapi/views/templates/front/';
+        $this->context->smarty->assign('mts_dir', $mts_front_templates);
+        $this->setTemplate($mts_front_templates . 'authentication.tpl');
 
         if ($this->ajax) {
             // Call a hook to display more information on form
@@ -131,7 +131,7 @@ class AuthController extends AuthControllerCore
             $return = array(
                 'hasError' => !empty($this->errors),
                 'errors' => $this->errors,
-                'page' => '<h1>PERROS HIJUEPUTAS</h1>',
+                'page' => null,
                 'token' => Tools::getToken(false)
             );
             $this->ajaxDie(Tools::jsonEncode($return));

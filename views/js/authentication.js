@@ -34,6 +34,8 @@ $(document).ready(function () {
     $('.is_customer_param').hide();
 });
 
+console.log('Modulo de Alegra de Metasysco.com');
+
 function submitFunction() {
     $('#create_account_error').html('').hide();
     $.ajax({
