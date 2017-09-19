@@ -53,6 +53,7 @@ function submitFunction() {
                 token: token
             },
         success: function (jsonData) {
+            console.log(jsonData);
             if (jsonData.hasError) {
                 var errors = '';
                 for (error in jsonData.errors)
@@ -62,7 +63,6 @@ function submitFunction() {
                 $('#create_account_error').html('<ol>' + errors + '</ol>').show();
             }
             else {
-                console.log(jsonData.page);
                 // adding a div to display a transition
                 $('#center_column').html('<div id="noSlide">' + $('#center_column').html() + '</div>');
                 $('#noSlide').fadeOut('slow', function () {

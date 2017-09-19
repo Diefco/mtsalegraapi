@@ -30,61 +30,6 @@
 
 class AuthController extends AuthControllerCore
 {
-    public $ssl = true;
-    public $php_self = 'authentication';
-    public $auth = false;
-
-    /**
-     * @var bool create_account
-     */
-    protected $create_account;
-    protected $id_country;
-
-    /**
-     * Initialize auth controller
-     * @see FrontController::init()
-     */
-    public function init()
-    {
-        parent::init();
-
-        if (!Tools::getIsset('step') && $this->context->customer->isLogged() && !$this->ajax) {
-            Tools::redirect('index.php?controller=' . (($this->authRedirection !== false) ? urlencode($this->authRedirection) : 'my-account'));
-        }
-
-        if (Tools::getValue('create_account')) {
-            $this->create_account = true;
-        }
-    }
-
-    /**
-     * Set default medias for this controller
-     * @see FrontController::setMedia()
-     */
-    public function setMedia()
-    {
-        parent::setMedia();
-        if (!$this->useMobileTheme()) {
-            $this->addCSS(_THEME_CSS_DIR_ . 'authentication.css');
-        }
-        $this->addJqueryPlugin('typewatch');
-        $this->addJS(array(
-            _PS_MODULE_DIR_ . 'mtsalegraapi/views/js/tools/vatManagement.js',
-            _PS_MODULE_DIR_ . 'mtsalegraapi/views/js/tools/statesManagement.js',
-            _PS_MODULE_DIR_ . 'mtsalegraapi/views/js/authentication.js',
-            _PS_JS_DIR_ . 'validate.js'
-        ));
-    }
-
-    /**
-     * Run ajax process
-     * @see FrontController::displayAjax()
-     */
-    public function displayAjax()
-    {
-        $this->display();
-    }
-
     /**
      * Assign template vars related to page content
      * @see FrontController::initContent()
@@ -153,7 +98,9 @@ class AuthController extends AuthControllerCore
         ));
 
         // Just set $this->template value here in case it's used by Ajax
-        $this->setTemplate(_PS_THEME_DIR_ . 'authentication.tpl');
+//        $mts_front_templates = _PS_MODULE_DIR_ . 'mtsalegraapi/views/templates/front/';
+//        $this->context->smarty->assign('mts_dir', $mts_front_templates);
+//        $this->setTemplate($mts_front_templates . 'authentication.tpl');
 
         if ($this->ajax) {
             // Call a hook to display more information on form
@@ -165,103 +112,10 @@ class AuthController extends AuthControllerCore
             $return = array(
                 'hasError' => !empty($this->errors),
                 'errors' => $this->errors,
-                'page' => $this->context->smarty->fetch($this->template),
+                'page' => '<h1>PERROS HIJUEPUTAS</h1>',
                 'token' => Tools::getToken(false)
             );
             $this->ajaxDie(Tools::jsonEncode($return));
-        }
-    }
-
-    /**
-     * Assign date var to smarty
-     */
-    protected function assignDate()
-    {
-        $selectedYears = (int)(Tools::getValue('years', 0));
-        $years = Tools::dateYears();
-        $selectedMonths = (int)(Tools::getValue('months', 0));
-        $months = Tools::dateMonths();
-        $selectedDays = (int)(Tools::getValue('days', 0));
-        $days = Tools::dateDays();
-
-        $this->context->smarty->assign(array(
-            'one_phone_at_least' => (int)Configuration::get('PS_ONE_PHONE_AT_LEAST'),
-            'onr_phone_at_least' => (int)Configuration::get('PS_ONE_PHONE_AT_LEAST'), //retro compat
-            'years' => $years,
-            'sl_year' => $selectedYears,
-            'months' => $months,
-            'sl_month' => $selectedMonths,
-            'days' => $days,
-            'sl_day' => $selectedDays
-        ));
-    }
-
-    /**
-     * Assign countries var to smarty
-     */
-    protected function assignCountries()
-    {
-        $this->id_country = (int)Tools::getCountry();
-        if (Configuration::get('PS_RESTRICT_DELIVERED_COUNTRIES')) {
-            $countries = Carrier::getDeliveredCountries($this->context->language->id, true, true);
-        } else {
-            $countries = Country::getCountries($this->context->language->id, true);
-        }
-        $this->context->smarty->assign(array(
-            'countries' => $countries,
-            'PS_REGISTRATION_PROCESS_TYPE' => Configuration::get('PS_REGISTRATION_PROCESS_TYPE'),
-            'sl_country' => (int)$this->id_country,
-            'vat_management' => Configuration::get('VATNUMBER_MANAGEMENT')
-        ));
-    }
-
-    /**
-     * Assign address var to smarty
-     */
-    protected function assignAddressFormat()
-    {
-        $addressItems = array();
-        $addressFormat = AddressFormat::getOrderedAddressFields((int)$this->id_country, false, true);
-        $requireFormFieldsList = AddressFormat::getFieldsRequired();
-
-        foreach ($addressFormat as $addressline) {
-            foreach (explode(' ', $addressline) as $addressItem) {
-                $addressItems[] = trim($addressItem);
-            }
-        }
-
-        // Add missing require fields for a new user susbscription form
-        foreach ($requireFormFieldsList as $fieldName) {
-            if (!in_array($fieldName, $addressItems)) {
-                $addressItems[] = trim($fieldName);
-            }
-        }
-
-        foreach (array('inv', 'dlv') as $addressType) {
-            $this->context->smarty->assign(array(
-                $addressType . '_adr_fields' => $addressFormat,
-                $addressType . '_all_fields' => $addressItems,
-                'required_fields' => $requireFormFieldsList
-            ));
-        }
-    }
-
-    /**
-     * Start forms process
-     * @see FrontController::postProcess()
-     */
-    public function postProcess()
-    {
-        if (Tools::isSubmit('SubmitCreate')) {
-            $this->processSubmitCreate();
-        }
-
-        if (Tools::isSubmit('submitAccount') || Tools::isSubmit('submitGuestAccount')) {
-            $this->processSubmitAccount();
-        }
-
-        if (Tools::isSubmit('SubmitLogin')) {
-            $this->processSubmitLogin();
         }
     }
 
@@ -351,35 +205,6 @@ class AuthController extends AuthControllerCore
             $this->ajaxDie(Tools::jsonEncode($return));
         } else {
             $this->context->smarty->assign('authentification_error', $this->errors);
-        }
-    }
-
-    /**
-     * Process the newsletter settings and set the customer infos.
-     *
-     * @param Customer $customer Reference on the customer Object.
-     *
-     * @note At this point, the email has been validated.
-     */
-    protected function processCustomerNewsletter(&$customer)
-    {
-        $blocknewsletter = Module::isInstalled('blocknewsletter') && $module_newsletter = Module::getInstanceByName('blocknewsletter');
-        if ($blocknewsletter && $module_newsletter->active && !Tools::getValue('newsletter')) {
-            require_once _PS_MODULE_DIR_ . 'blocknewsletter/blocknewsletter.php';
-            if (is_callable(array($module_newsletter, 'isNewsletterRegistered')) && $module_newsletter->isNewsletterRegistered(Tools::getValue('email')) == Blocknewsletter::GUEST_REGISTERED) {
-                /* Force newsletter registration as customer as already registred as guest */
-                $_POST['newsletter'] = true;
-            }
-        }
-
-        if (Tools::getValue('newsletter')) {
-            $customer->newsletter = true;
-            $customer->ip_registration_newsletter = pSQL(Tools::getRemoteAddr());
-            $customer->newsletter_date_add = pSQL(date('Y-m-d H:i:s'));
-            /** @var Blocknewsletter $module_newsletter */
-            if ($blocknewsletter && $module_newsletter->active) {
-                $module_newsletter->confirmSubscription(Tools::getValue('email'));
-            }
         }
     }
 
@@ -710,24 +535,6 @@ class AuthController extends AuthControllerCore
     }
 
     /**
-     * Process submit on a creation
-     */
-    protected function processSubmitCreate()
-    {
-        if (!Validate::isEmail($email = trim(Tools::getValue('email_create'))) || empty($email)) {
-            $this->errors[] = Tools::displayError('Invalid email address.');
-        } elseif (Customer::customerExists($email)) {
-            $this->errors[] = Tools::displayError('An account using this email address has already been registered. Please enter a valid password or request a new one. ', false);
-            $_POST['email'] = trim(Tools::getValue('email_create'));
-            unset($_POST['email_create']);
-        } else {
-            $this->create_account = true;
-            $this->context->smarty->assign('email_create', Tools::safeOutput($email));
-            $_POST['email'] = $email;
-        }
-    }
-
-    /**
      * Update context after customer creation
      * @param Customer $customer Created customer
      */
@@ -752,50 +559,5 @@ class AuthController extends AuthControllerCore
         $this->context->cookie->is_guest = !Tools::getValue('is_new_customer', 1);
         // Update cart address
         $this->context->cart->secure_key = $customer->secure_key;
-    }
-
-    /**
-     * sendConfirmationMail
-     * @param Customer $customer
-     * @return bool
-     */
-    protected function sendConfirmationMail(Customer $customer)
-    {
-        if (!Configuration::get('PS_CUSTOMER_CREATION_EMAIL')) {
-            return true;
-        }
-
-        return Mail::Send(
-            $this->context->language->id,
-            'account',
-            Mail::l('Welcome!'),
-            array(
-                '{firstname}' => $customer->firstname,
-                '{lastname}' => $customer->lastname,
-                '{email}' => $customer->email,
-                '{passwd}' => Tools::getValue('passwd')),
-            $customer->email,
-            $customer->firstname . ' ' . $customer->lastname
-        );
-    }
-
-    public function printer($var, $die = true, $line = false, $debug = false)
-    {
-        echo "<pre>";
-        if ($debug) {
-            var_dump($var);
-        } else {
-            print_r($var);
-        }
-
-        if (!$line) {
-            echo "<br>En la linea " . $line;
-        }
-
-        if ($die) {
-            die('Fin');
-        }
-
-        echo "</pre>";
     }
 }
