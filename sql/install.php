@@ -58,8 +58,6 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mtsalegraapi_contacts` 
 
 $excludedSql[] = 'ALTER TABLE `' . _DB_PREFIX_ . 'customer`
     ADD `legal_type` INT NOT NULL AFTER `ape`,
-    ADD `dni_type` INT NOT NULL AFTER `ape`,
-    ADD `dni_number` VARCHAR(50) NOT NULL AFTER `ape`,
     ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 foreach ($excludedSql as $excludedQuery) {
