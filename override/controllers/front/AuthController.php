@@ -258,8 +258,6 @@ class AuthController extends AuthControllerCore
         $lastnameAddress = Tools::getValue('lastname');
         $firstnameAddress = Tools::getValue('firstname');
         $legal_type = Tools::getValue('legal_type');
-        $dni_type = Tools::getValue('dni_typ');
-        $dni_number = Tools::getValue('dni_number');
         $_POST['lastname'] = Tools::getValue('customer_lastname', $lastnameAddress);
         $_POST['firstname'] = Tools::getValue('customer_firstname', $firstnameAddress);
         $addresses_types = array('address');
@@ -298,8 +296,6 @@ class AuthController extends AuthControllerCore
                 $customer->firstname = Tools::ucwords($customer->firstname);
                 $customer->birthday = (empty($_POST['years']) ? '' : (int)Tools::getValue('years') . '-' . (int)Tools::getValue('months') . '-' . (int)Tools::getValue('days'));
                 $customer->legal_type = $legal_type;
-                $customer->dni_type = $dni_type;
-                $customer->dni_number = $dni_number;
                 if (!Validate::isBirthDate($customer->birthday)) {
                     $this->errors[] = Tools::displayError('Invalid date of birth.');
                 }
@@ -427,8 +423,6 @@ class AuthController extends AuthControllerCore
 
             $customer->birthday = (empty($_POST['years']) ? '' : (int)Tools::getValue('years') . '-' . (int)Tools::getValue('months') . '-' . (int)Tools::getValue('days'));
             $customer->legal_type = $legal_type;
-            $customer->dni_type = $dni_type;
-            $customer->dni_number = $dni_number;
             if (!Validate::isBirthDate($customer->birthday)) {
                 $this->errors[] = Tools::displayError('Invalid date of birth');
             }
