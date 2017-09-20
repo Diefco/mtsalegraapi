@@ -32,10 +32,6 @@ class Customer extends CustomerCore
 {
     public $legal_type;
 
-    public $dni_type;
-
-    public $dni_number;
-
     public static $definition = array(
         'table' => 'customer',
         'primary' => 'id_customer',
@@ -43,9 +39,7 @@ class Customer extends CustomerCore
             'secure_key' => array('type' => self::TYPE_STRING, 'validate' => 'isMd5', 'copy_post' => false),
             'lastname' => array('type' => self::TYPE_STRING, 'validate' => 'isName', 'required' => true, 'size' => 32),
             'firstname' => array('type' => self::TYPE_STRING, 'validate' => 'isName', 'required' => true, 'size' => 32),
-            'legal_type' => array('type' => self::TYPE_STRING, 'validate' => 'isName', 'required' => true, 'size' => 32),
-            'dni_type' => array('type' => self::TYPE_STRING, 'validate' => 'isName', 'required' => true, 'size' => 32),
-            'dni_number' => array('type' => self::TYPE_STRING, 'validate' => 'isName', 'required' => true, 'size' => 32),
+            'legal_type' => array('type' => self::TYPE_STRING, 'validate' => 'isLegalType', 'required' => true, 'size' => 32),
             'email' => array('type' => self::TYPE_STRING, 'validate' => 'isEmail', 'required' => true, 'size' => 128),
             'passwd' => array('type' => self::TYPE_STRING, 'validate' => 'isPasswd', 'required' => true, 'size' => 32),
             'last_passwd_gen' => array('type' => self::TYPE_STRING, 'copy_post' => false),
@@ -57,8 +51,8 @@ class Customer extends CustomerCore
             'optin' => array('type' => self::TYPE_BOOL, 'validate' => 'isBool'),
             'website' => array('type' => self::TYPE_STRING, 'validate' => 'isUrl'),
             'company' => array('type' => self::TYPE_STRING, 'validate' => 'isGenericName'),
-            'siret' => array('type' => self::TYPE_STRING, 'validate' => 'isSiret'),
-            'ape' => array('type' => self::TYPE_STRING, 'validate' => 'isApe'),
+            'siret' => array('type' => self::TYPE_STRING, 'validate' => 'isDniNumber', 'required' => true),
+            'ape' => array('type' => self::TYPE_STRING, 'validate' => 'isDniType', 'required' => true),
             'outstanding_allow_amount' => array('type' => self::TYPE_FLOAT, 'validate' => 'isFloat', 'copy_post' => false),
             'show_public_prices' => array('type' => self::TYPE_BOOL, 'validate' => 'isBool', 'copy_post' => false),
             'id_risk' => array('type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'copy_post' => false),
