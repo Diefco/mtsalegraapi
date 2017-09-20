@@ -1,5 +1,5 @@
 {*
-* 2007-2016 PrestaShop
+* 2007-2014 PrestaShop
 *
 * NOTICE OF LICENSE
 *
@@ -18,7 +18,7 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author PrestaShop SA <contact@prestashop.com>
-*  @copyright  2007-2016 PrestaShop SA
+*  @copyright  2007-2014 PrestaShop SA
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 *}
@@ -30,7 +30,6 @@
     {/if}
 {/capture}
 <h1 class="page-heading">{if !isset($email_create)}{l s='Authentication'}{else}{l s='Create an account'}{/if}</h1>
-<h1>{$mts_dir}</h1>
 {if isset($back) && preg_match("/^http/", $back)}{assign var='current_step' value='login'}{include file="$tpl_dir./order-steps.tpl"}{/if}
 {include file="$tpl_dir./errors.tpl"}
 {assign var='stateExist' value=false}
@@ -65,7 +64,6 @@
                                data-validate="isEmail" id="email_create" name="email_create"
                                value="{if isset($smarty.post.email_create)}{$smarty.post.email_create|stripslashes}{/if}"/>
                     </div>
-                    <h1>{$mts_dir}</h1>
                     <div class="submit">
                         {if isset($back)}<input type="hidden" class="hidden" name="back"
                                                 value="{$back|escape:'html':'UTF-8'}" />{/if}
@@ -100,7 +98,6 @@
                     <p class="lost_password form-group"><a href="{$link->getPageLink('password')|escape:'html':'UTF-8'}"
                                                            title="{l s='Recover your forgotten password'}"
                                                            rel="nofollow">{l s='Forgot your password?'}</a></p>
-                    <h1>{$mts_dir}</h1>
                     <p class="submit">
                         {if isset($back)}<input type="hidden" class="hidden" name="back"
                                                 value="{$back|escape:'html':'UTF-8'}" />{/if}
@@ -115,6 +112,9 @@
                 </div>
             </form>
         </div>
+        {if isset($HOOK_CREATE_ACCOUNT_TOP) && $HOOK_CREATE_ACCOUNT_TOP}
+            {$HOOK_CREATE_ACCOUNT_TOP}
+        {/if}
     </div>
     {if isset($inOrderProcess) && $inOrderProcess && $PS_GUEST_CHECKOUT_ENABLED}
         <form action="{$link->getPageLink('authentication', true, NULL, "back=$back")|escape:'html':'UTF-8'}"
@@ -126,7 +126,7 @@
                     <!-- Account -->
                     <div class="required form-group">
                         <label for="guest_email">{l s='Email address'} <sup>*</sup></label>
-                        <input type="email" class="is_required validate form-control" data-validate="isEmail"
+                        <input type="text" class="is_required validate form-control" data-validate="isEmail"
                                id="guest_email" name="guest_email"
                                value="{if isset($smarty.post.guest_email)}{$smarty.post.guest_email}{/if}"/>
                     </div>
@@ -518,7 +518,7 @@
         <div class="account_creation">
             <h3 class="page-subheading">{l s='Your personal information'}</h3>
             <p class="required"><sup>*</sup>{l s='Required field'}</p>
-            <div class="clearfix">
+            <div class="clearfix gender-line">
                 <label>{l s='Title'}</label>
                 <br/>
                 {foreach from=$genders key=k item=gender}
@@ -554,7 +554,31 @@
                        id="passwd"/>
                 <span class="form_info">{l s='(Five characters minimum)'}</span>
             </div>
-            <div class="form-group">
+            <div class="required password_confirm form-group">
+                <label for="passwd_confirm">{l s='Confirm Password'} <sup>*</sup></label>
+                <input type="password" class="is_required validate form-control" data-validate="ispasswd_confirm"
+                       name="passwd_confirm" id="passwd_confirm"/>
+                <span class="form_info">{l s='(Five characters minimum)'}</span>
+                {literal}
+                    <script type="text/javascript">
+                        /* Validación pass igual */
+                        $(function () {
+                            $("#passwd_confirm").focusout(function () {
+                                if ($('#passwd').attr('value') == $('input#passwd_confirm').attr('value')) {
+                                    $('.password_confirm').removeClass('form-error');
+                                    $('.password_confirm').addClass('form-ok');
+                                    $('button#submitAccount').removeAttr("disabled");
+                                } else {
+                                    $('.password_confirm').removeClass('form-ok');
+                                    $('.password_confirm').addClass('form-error');
+                                    $('button#submitAccount').attr('disabled', 'disabled');
+                                }
+                            });
+                        });
+                    </script>
+                {/literal}
+            </div>
+            <div class="form-group date-select">
                 <label>{l s='Date of Birth'}</label>
                 <div class="row">
                     <div class="col-xs-4">
@@ -624,19 +648,38 @@
             <div class="account_creation">
                 <h3 class="page-subheading">{l s='Your company information'}</h3>
                 <p class="form-group">
-                    <label for="">{l s='Company'}</label>
+                    <label for="legal_type">{l s='Tipo de Persona' mod='mtsalegraapi'}<sup>*</sup></label>
+                    <select class="form-control" id="legal_type" name="legal_type">
+                        <option value="invalid">{l s='--' mod='mtsalegraapi'}</option>
+                        <option value="PN">{l s='Persona Natural' mod='mtsalegraapi'}</option>
+                        <option value="PJ">{l s='Persona Jurídica' mod='mtsalegraapi'}</option>
+                    </select>
+                </p>
+                <p class="form-group">
+                    <label for="">{l s='Nombre o Razón Social' mod='mtsalegraapi'}<sup>*</sup></label>
                     <input type="text" class="form-control" id="company" name="company"
                            value="{if isset($smarty.post.company)}{$smarty.post.company}{/if}"/>
+                    <span>{l s='A nombre de quién quedará la factura' mod='mtsalegraapi'}</span>
                 </p>
                 <p class="form-group">
-                    <label for="siret">{l s='SIRET'}</label>
+                    <label for="legal_type">{l s='Tipo de documento' mod='mtsalegraapi'}<sup>*</sup></label>
+                    <select class="form-control" id="ape" name="ape">
+                        <option value="invalid">{l s='--' mod='mtsalegraapi'}</option>
+                        <option value="CC">{l s='CC' mod='mtsalegraapi'}</option>
+                        <option value="CE">{l s='CE' mod='mtsalegraapi'}</option>
+                        <option value="NIT">{l s='NIT' mod='mtsalegraapi'}</option>
+                        <option value="TI">{l s='TI' mod='mtsalegraapi'}</option>
+                        <option value="PP">{l s='PP' mod='mtsalegraapi'}</option>
+                        <option value="IDC">{l s='IDC' mod='mtsalegraapi'}</option>
+                        <option value="CEL">{l s='CEL' mod='mtsalegraapi'}</option>
+                        <option value="RC">{l s='RC' mod='mtsalegraapi'}</option>
+                        <option value="DE">{l s='DE' mod='mtsalegraapi'}</option>
+                    </select>
+                </p>
+                <p class="form-group">
+                    <label for="siret">{l s='Número de documento' mod='mtsalegraapi'}<sup>*</sup></label>
                     <input type="text" class="form-control" id="siret" name="siret"
                            value="{if isset($smarty.post.siret)}{$smarty.post.siret}{/if}"/>
-                </p>
-                <p class="form-group">
-                    <label for="ape">{l s='APE'}</label>
-                    <input type="text" class="form-control" id="ape" name="ape"
-                           value="{if isset($smarty.post.ape)}{$smarty.post.ape}{/if}"/>
                 </p>
                 <p class="form-group">
                     <label for="website">{l s='Website'}</label>
@@ -800,40 +843,77 @@
         </div>
     </form>
 {/if}
+
 {strip}
+
     {if isset($smarty.post.id_state) && $smarty.post.id_state}
+
         {addJsDef idSelectedState=$smarty.post.id_state|intval}
+
     {elseif isset($address->id_state) && $address->id_state}
+
         {addJsDef idSelectedState=$address->id_state|intval}
+
     {else}
+
         {addJsDef idSelectedState=false}
+
     {/if}
+
     {if isset($smarty.post.id_state_invoice) && isset($smarty.post.id_state_invoice) && $smarty.post.id_state_invoice}
+
         {addJsDef idSelectedStateInvoice=$smarty.post.id_state_invoice|intval}
+
     {else}
+
         {addJsDef idSelectedStateInvoice=false}
+
     {/if}
+
     {if isset($smarty.post.id_country) && $smarty.post.id_country}
+
         {addJsDef idSelectedCountry=$smarty.post.id_country|intval}
+
     {elseif isset($address->id_country) && $address->id_country}
+
         {addJsDef idSelectedCountry=$address->id_country|intval}
+
     {else}
+
         {addJsDef idSelectedCountry=false}
+
     {/if}
+
     {if isset($smarty.post.id_country_invoice) && isset($smarty.post.id_country_invoice) && $smarty.post.id_country_invoice}
+
         {addJsDef idSelectedCountryInvoice=$smarty.post.id_country_invoice|intval}
+
     {else}
+
         {addJsDef idSelectedCountryInvoice=false}
+
     {/if}
+
     {if isset($countries)}
+
         {addJsDef countries=$countries}
+
     {/if}
+
     {if isset($vatnumber_ajax_call) && $vatnumber_ajax_call}
+
         {addJsDef vatnumber_ajax_call=$vatnumber_ajax_call}
+
     {/if}
+
     {if isset($email_create) && $email_create}
+
         {addJsDef email_create=$email_create|boolval}
+
     {else}
+
         {addJsDef email_create=false}
+
     {/if}
+
 {/strip}
