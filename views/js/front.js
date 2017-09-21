@@ -45,6 +45,8 @@ $(document).ready(function () {
             $(completeID).val($(selector).val());
         });
     });
+    console.log('Putos todos');
+    console.log($('div.alert.alert-danger').find('ape'));
 });
 
 

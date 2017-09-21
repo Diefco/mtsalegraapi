@@ -34,8 +34,6 @@ $(document).ready(function () {
     $('.is_customer_param').hide();
 });
 
-console.log('Modulo de Alegra de Metasysco.com');
-
 function submitFunction() {
     $('#create_account_error').html('').hide();
     $.ajax({
@@ -55,7 +53,6 @@ function submitFunction() {
                 token: token
             },
         success: function (jsonData) {
-            console.log(jsonData);
             if (jsonData.hasError) {
                 var errors = '';
                 for (error in jsonData.errors)
