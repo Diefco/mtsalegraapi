@@ -56,13 +56,18 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mtsalegraapi_contacts` 
     PRIMARY KEY  (`id_contact_store`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
-$excludedSql[] = 'ALTER TABLE `' . _DB_PREFIX_ . 'customer`
-    ADD `legal_type` INT NOT NULL AFTER `ape`,
-    ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
-
-foreach ($excludedSql as $excludedQuery) {
-    Db::getInstance()->execute($excludedQuery);
-}
+$sql[] = "UPDATE `" . _DB_PREFIX_ . "address_format`
+SET `format`='firstname
+lastname 
+address1 
+address2 
+postcode 
+city 
+Country:name 
+phone 
+phone_mobile 
+Customer:siret'
+WHERE `id_country`=69";
 
 foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {
