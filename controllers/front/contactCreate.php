@@ -32,14 +32,123 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
 {
     public function initContent()
     {
-        // include_once(_PS_MODULE_DIR_.'../config/config.inc.php');
-        // include_once(_PS_MODULE_DIR_.'../config/settings.inc.php');
-        // include_once(_PS_MODULE_DIR_.'../classes/Cookie.php');
-
         parent::initContent();
 
         $cookie = new Cookie('session');
 
+        // Validate if the current user is Authorized.
+        $this->validateCookieAuth($cookie);
+
+        // Execute the auto-ignore for Demo Customer
+        $this->firstCustomerCall();
+
+        $mts_join = $this->dbQueryJoin(
+            'id_customer',
+            'customer',
+            'id_contact_store',
+            'mtsalegraapi_contacts',
+            'id_contact_alegra',
+            'contact_ignored'
+        );
+
+        $contactArray = array();
+
+        $contactIdWhereQuery = '';
+
+        if (count($mts_join) == 1) {
+            $contactIdWhereQuery .= 'id_customer=' . $mts_join[0]['id_customer'];
+        } elseif (count($mts_join) > 1) {
+            for ($i = 0; $i < count($mts_join) - 1; $i++) {
+                $contactIdWhereQuery .= 'id_customer=' . $mts_join[$i]['id_customer'] . ' || ';
+            }
+            $contactIdWhereQuery .= 'id_customer=' . $mts_join[count($mts_join) - 1]['id_customer'];
+        }
+
+        $contactBasicInfo = $this->dbQuery(
+            array(
+                'id_customer',
+                'firstname',
+                'lastname',
+                'email',
+                'siret',
+                'ape'
+            ),
+            'customer',
+            $contactIdWhereQuery,
+            'id_customer'
+        );
+
+        if (count($contactBasicInfo) > 0) {
+            foreach ($contactBasicInfo as $indexContact => $contact) {
+                $addressArray = $this->dbQuery(
+                    array(
+                        'id_address',
+                        'id_country',
+                        'id_state',
+                        'alias',
+                        'address1',
+                        'address2',
+                        'postcode',
+                        'city',
+                        'phone',
+                        'phone_mobile'
+                    ),
+                    'address',
+                    'id_customer = ' . $contact['id_customer'],
+                    'id_address'
+                );
+
+                $addressComplete = $addressArray[0]['address1'];
+                if ($addressArray[0]['address2'] != null || $addressArray[0]['address2'] != '') {
+                    $addressComplete .= $addressArray[0]['address2'];
+                }
+
+                $cityComplete = $addressArray[0]['city'];
+
+                if ($addressArray[0]['id_state'] != null ||
+                    $addressArray[0]['id_state'] != '' ||
+                    $addressArray[0]['id_state'] != 0
+                ) {
+                    $stateArray = $this->dbQuery(
+                        'name',
+                        'state',
+                        'id_state = ' . $addressArray[0]['id_state']
+                    );
+                    $cityComplete .= ' / ' . $stateArray[0]['name'];
+                }
+
+                if ($addressArray[0]['id_country'] != null ||
+                    $addressArray[0]['id_country'] != '' ||
+                    $addressArray[0]['id_country'] != 0
+                ) {
+                    $countryArray = $this->dbQuery(
+                        'iso_code',
+                        'country',
+                        'id_country = ' . $addressArray[0]['id_country']
+                    );
+                    $cityComplete .= ' / ' . $countryArray[0]['iso_code'];
+                }
+
+                $contactArray[$contact['id_customer']] = array(
+                    'name' => $contact['firstname'] . ' ' . $contact['lastname'],
+                    'identification' => $contact['siret'],
+                    'email' => $contact['email'],
+                    'phonePrimary' => $addressArray[0]['phone'],
+                    'mobile' => $addressArray[0]['phone_mobile'],
+                    'type' => 'client',
+                    'address' => array(
+                        'address' => $addressComplete,
+                        'city' => $cityComplete
+                    ),
+                    'observations' => $contact['ape'],
+                );
+            }
+        }
+        $this->printer($contactArray, __LINE__);
+    }
+
+    private function validateCookieAuth($cookie)
+    {
         if ($cookie->auth != true) {
             Tools::redirect($this->context->link->getModuleLink(
                 'mtsalegraapi',
@@ -48,7 +157,10 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
                 Configuration::get('PS_SSL_ENABLED')
             ));
         }
+    }
 
+    private function getApiAuthToken()
+    {
         /**
          * !!!DISCLAIMER!!!
          * https://developer.alegra.com/v1/docs/autenticacion
@@ -60,8 +172,11 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
             Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token')
         );
 
-        $limitQuery = Configuration::get('mts_AlgApi_limitQuery');
+        return $authToken;
+    }
 
+    private function firstCustomerCall()
+    {
         $sql = new DbQuery();
         $sql
             ->select('id_contact_store')
@@ -93,77 +208,56 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
                 ));
             }
         }
+    }
+
+    private function dbQueryJoin($rightColumn, $rightTable, $leftColumn, $leftTable, $leftWhere_1, $leftWhere_2, $alias = null)
+    {
+        // Get the limit number to send a DB Query.
+        $limitQuery = Configuration::get('mts_AlgApi_limitQuery');
+
+        if (is_array($rightColumn)) {
+            return false;
+        }
 
         $sql = new DbQuery();
         $sql
-            ->select('id_customer')
-            ->from('customer')
+            ->select($rightColumn)
+            ->from($rightTable)
             ->leftJoin(
-                'mtsalegraapi_contacts',
-                null,
-                'ps_customer.id_customer = ps_mtsalegraapi_contacts.id_contact_store'
+                $leftTable,
+                $alias,
+                _DB_PREFIX_ . $rightTable . '.' . $rightColumn . ' = ' .
+                _DB_PREFIX_ . $leftTable . '.' . $leftColumn
             )
             ->where(
-                'ps_mtsalegraapi_contacts.id_contact_alegra is NULL ||
-                ps_mtsalegraapi_contacts.contact_ignored is NULL '
+                _DB_PREFIX_ . $leftTable . '.' . $leftWhere_1 . ' is NULL ||' .
+                _DB_PREFIX_ . $leftTable . '.' . $leftWhere_2 . ' is NULL'
             )
             ->limit($limitQuery)
             ->orderBy('id_customer');
-        $mts_join = Db::getInstance()->executeS($sql);
-
-        $contactArray = array();
-
-        $contactIdWhereQuery = '';
-
-        if (count($mts_join) == 1) {
-            $contactIdWhereQuery .= 'id_customer=' . $mts_join[0]['id_customer'];
-        } elseif (count($mts_join) > 1) {
-            for ($i = 0; $i < count($mts_join) - 1; $i++) {
-                $contactIdWhereQuery .= 'id_customer=' . $mts_join[$i]['id_customer'] . ' || ';
-            }
-            $contactIdWhereQuery .= 'id_customer=' . $mts_join[count($mts_join) - 1]['id_customer'];
-        }
-
-        // Get the list with all taxes registered in the Store
-        $sql = new DbQuery();
-        $sql->select('id_customer, firstname, lastname, email')
-            ->from('customer')
-            ->where($contactIdWhereQuery)
-            ->orderBy('id_customer');
-        $contactBasicInfo = Db::getInstance()->executeS($sql);
-
-        if (count($contactBasicInfo) > 0) {
-            foreach ($mts_join as $indexContact => $contact) {
-                $contactArray[$contact['id_customer']] = array(
-                    'name' => null,
-                    'identification' => null,
-                    'email' => null,
-                    'phonePrimary' => null,
-                    'phoneSecondary' => null,
-                    'mobile' => null,
-                    'type' => null,
-                    'address' => array(
-                        'address' => null,
-                        'city' => null
-                    ),
-                );
-
-                // Get the short description for each product
-                $sql = new DbQuery();
-                $sql->select('id_address, id_country, id_state, alias, address1, address2, postcode, city, phone,
-                        phone_mobile')
-                    ->from('address')
-                    ->where('id_customer = ' . $contact['id_customer'])
-                    ->orderBy('id_address');
-                $addressArray = Db::getInstance()->executeS($sql);
-                $this->printer($addressArray, __LINE__, false);
-            }
-        }
-
-        $this->printer($contactBasicInfo, __LINE__);
+        return Db::getInstance()->executeS($sql);
     }
 
-    private function sendToApi($authToken, $url, $method, $request = null)
+    private function dbQuery($select_array, $table, $where, $orderBy = null)
+    {
+        if (is_array($select_array)) {
+            $select = implode(', ', $select_array);
+        } else {
+            $select = $select_array;
+        }
+
+        $sql = new DbQuery();
+        $sql->select($select)
+            ->from($table)
+            ->where($where);
+        if ($orderBy != null) {
+            $sql->orderBy('id_customer');
+        }
+
+        return Db::getInstance()->executeS($sql);
+    }
+
+    private function sendToApi($url, $method, $request = null)
     {
         $method = Tools::strtoupper($method);
         if (!($method != 'POST' || $method != 'GET') || $method == null) {
@@ -204,6 +298,7 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         }
 
         $jsonRequest = json_encode($request);
+        $authToken = $this->getApiAuthToken();
 
         $urlRequest = 'https://app.alegra.com/api/v1/' . $url . '/';
         $headers = array(

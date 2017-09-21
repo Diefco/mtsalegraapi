@@ -32,71 +32,20 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
 {
     public function initContent()
     {
-        // include_once(_PS_MODULE_DIR_.'../config/config.inc.php');
-        // include_once(_PS_MODULE_DIR_.'../config/settings.inc.php');
-        // include_once(_PS_MODULE_DIR_.'../classes/Cookie.php');
-
         parent::initContent();
 
         $cookie = new Cookie('session');
 
-        if ($cookie->auth != true) {
-            Tools::redirect($this->context->link->getModuleLink(
-                'mtsalegraapi',
-                'login',
-                array(),
-                Configuration::get('PS_SSL_ENABLED')
-            ));
-        }
+        // Validate if the current user is Authorized.
+        $this->validateCookieAuth($cookie);
 
-        /**
-         * !!!DISCLAIMER!!!
-         * https://developer.alegra.com/v1/docs/autenticacion
-         * Base64 encoding required from ALegra API: Must be used to generate an Authentication Token.
-         * Otherwise, this module will not work properly.
-         */
-
-        $authToken = base64_encode(
-            Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token')
-        );
-
+        // Get the limit number to send a DB Query.
         $limitQuery = Configuration::get('mts_AlgApi_limitQuery');
 
-        $sql = new DbQuery();
-        $sql->select('id_product_store')
-            ->from('mtsalegraapi_products')
-            ->limit('1');
-        $mts_product = Db::getInstance()->executeS($sql);
+        // Execute the auto-ignore for Demo products
+        $this->firstProductsCall();
 
-        if (count($mts_product) == 0) {
-            $sql = new DbQuery();
-            $sql->select('id_product, reference')
-                ->from('product')
-                ->limit('7')
-                ->orderBy('id_product');
-            $store_product = Db::getInstance()->executeS($sql);
 
-            //  First Execution (Module recently installed)
-            if (count($store_product) > 0 &&
-                $store_product[0]['id_product'] == 1 && $store_product[0]['reference'] = "demo_1" &&
-                $store_product[1]['id_product'] == 2 && $store_product[1]['reference'] = "demo_2" &&
-                $store_product[2]['id_product'] == 3 && $store_product[2]['reference'] = "demo_3" &&
-                $store_product[3]['id_product'] == 4 && $store_product[3]['reference'] = "demo_4" &&
-                $store_product[4]['id_product'] == 5 && $store_product[4]['reference'] = "demo_5" &&
-                $store_product[5]['id_product'] == 6 && $store_product[5]['reference'] = "demo_6" &&
-                $store_product[6]['id_product'] == 7 && $store_product[6]['reference'] = "demo_7") {
-                $products = array();
-                for ($i = 1; $i <= 7; $i++) {
-                    $products[] = array (
-                        'id_product_store'  => $i,
-                        'id_product_alegra' => 0,
-                        'product_ignored' => true
-                    );
-                }
-
-                Db::getInstance()->insert('mtsalegraapi_products', $products);
-            }
-        }
 
         $sql = new DbQuery();
         $sql->select('id_product, reference, id_tax_rules_group')
@@ -136,7 +85,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
             }
         }
 
-        $taxesAlegraArray = $this->sendToApi($authToken, 'taxes', 'get', null);
+        $taxesAlegraArray = $this->sendToApi('taxes', 'get', null);
 
         $productsArray = array();
 
@@ -269,7 +218,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
             $postValues = Tools::getAllValues();
 
             if (count($postValues) > 3) {
-                $apiResponse = $this->validatePostValues(array_keys($productsArray), $authToken);
+                $apiResponse = $this->validatePostValues(array_keys($productsArray));
 
                 foreach ($apiResponse as $idProduct => $response) {
                     $this->printer($response, false, false);
@@ -320,7 +269,74 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         $this->setTemplate('products/create.tpl');
     }
 
-    private function validatePostValues($productsKeys, $authToken)
+    private function validateCookieAuth($cookie)
+    {
+        if ($cookie->auth != true) {
+            Tools::redirect($this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'login',
+                array(),
+                Configuration::get('PS_SSL_ENABLED')
+            ));
+        }
+    }
+
+    private function getApiAuthToken()
+    {
+        /**
+         * !!!DISCLAIMER!!!
+         * https://developer.alegra.com/v1/docs/autenticacion
+         * Base64 encoding required from ALegra API: Must be used to generate an Authentication Token.
+         * Otherwise, this module will not work properly.
+         */
+
+        $authToken = base64_encode(
+            Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token')
+        );
+
+        return $authToken;
+    }
+
+    private function firstProductsCall()
+    {
+        $sql = new DbQuery();
+        $sql->select('id_product_store')
+            ->from('mtsalegraapi_products')
+            ->limit('1');
+        $mts_product = Db::getInstance()->executeS($sql);
+
+        if (count($mts_product) == 0) {
+            $sql = new DbQuery();
+            $sql->select('id_product, reference')
+                ->from('product')
+                ->limit('7')
+                ->orderBy('id_product');
+            $store_product = Db::getInstance()->executeS($sql);
+
+            //  First Execution (Module recently installed)
+            if (count($store_product) > 0 &&
+                $store_product[0]['id_product'] == 1 && $store_product[0]['reference'] = "demo_1" &&
+                    $store_product[1]['id_product'] == 2 && $store_product[1]['reference'] = "demo_2" &&
+                        $store_product[2]['id_product'] == 3 && $store_product[2]['reference'] = "demo_3" &&
+                            $store_product[3]['id_product'] == 4 && $store_product[3]['reference'] = "demo_4" &&
+                                $store_product[4]['id_product'] == 5 && $store_product[4]['reference'] = "demo_5" &&
+                                    $store_product[5]['id_product'] == 6 && $store_product[5]['reference'] = "demo_6" &&
+                                        $store_product[6]['id_product'] == 7 && $store_product[6]['reference'] = "demo_7") {
+                $products = array();
+                for ($i = 1; $i <= 7; $i++) {
+                    $products[] = array(
+                        'id_product_store' => $i,
+                        'id_product_alegra' => 0,
+                        'product_ignored' => true
+                    );
+                }
+
+                Db::getInstance()->insert('mtsalegraapi_products', $products);
+            }
+        }
+    }
+
+    private function validatePostValues($productsKeys)
     {
         $productToSend = array();
         $respuesta = array();
@@ -382,7 +398,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                         (int)Tools::getValue('product_' . $idProduct . '_price');
                 }
 
-                $respuesta[$idProduct] = $this->sendToApi($authToken, 'items', 'post', $productToSend[$idProduct]);
+                $respuesta[$idProduct] = $this->sendToApi('items', 'post', $productToSend[$idProduct]);
             } elseif (Tools::getIsset('product_' . $idProduct . '_option') &&
                 Tools::getValue('product_' . $idProduct . '_option') == 'ignore'
             ) {
@@ -394,7 +410,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         return $respuesta;
     }
 
-    private function sendToApi($authToken, $url, $method, $request = null)
+    private function sendToApi($url, $method, $request = null)
     {
         $method = Tools::strtoupper($method);
         if (!($method != 'POST' || $method != 'GET') || $method == null) {
@@ -435,6 +451,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         }
 
         $jsonRequest = json_encode($request);
+        $authToken = $this->getApiAuthToken();
 
         $urlRequest = 'https://app.alegra.com/api/v1/'.$url.'/';
         $headers = array(
