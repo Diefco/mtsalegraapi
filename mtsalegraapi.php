@@ -71,17 +71,29 @@ class Mtsalegraapi extends Module
     public function install()
     {
         Configuration::updateValue('mts_AlgApi_Tooltips', 'false');
+        Configuration::updateValue('mts_AlgApi_ChangeConfig', 'false');
         Configuration::updateValue('mts_AlgApi_User', '');
         Configuration::updateValue('mts_AlgApi_Password', '');
         Configuration::updateValue('mts_AlgApi_Email', '');
         Configuration::updateValue('mts_AlgApi_Token', '');
         Configuration::updateValue('mts_AlgApi_limitQuery', '5');
 
+        Configuration::updateValue('mts_AlgApi_SmartyForceCompileBK', Configuration::get('PS_SMARTY_FORCE_COMPILE'));
+        Configuration::updateValue('mts_AlgApi_B2BModeBK', Configuration::get('PS_B2B_ENABLE'));
+        Configuration::updateValue('mts_AlgApi_RegistrationType', Configuration::get('PS_REGISTRATION_PROCESS_TYPE'));
+
+        Configuration::updateValue('PS_SMARTY_FORCE_COMPILE', 1);
+        Configuration::updateValue('PS_B2B_ENABLE', 1);
+        Configuration::updateValue('PS_REGISTRATION_PROCESS_TYPE', 1);
+
+
+
         include(dirname(__FILE__) . '/sql/install.php');
 
         return parent::install() &&
             $this->registerHook('header') &&
-            $this->registerHook('backOfficeHeader');
+            $this->registerHook('backOfficeHeader') &&
+            $this->registerHook('displayCustomerAccountForm');
     }
 
     public function uninstall()
@@ -92,6 +104,15 @@ class Mtsalegraapi extends Module
         Configuration::deleteByName('mts_AlgApi_Email');
         Configuration::deleteByName('mts_AlgApi_Token');
         Configuration::deleteByName('mts_AlgApi_limitQuery');
+
+        Configuration::updateValue('PS_SMARTY_FORCE_COMPILE', Configuration::get('mts_AlgApi_SmartyForceCompileBK'));
+        Configuration::updateValue('PS_B2B_ENABLE', Configuration::get('mts_AlgApi_B2BModeBK'));
+        Configuration::updateValue('PS_REGISTRATION_PROCESS_TYPE', Configuration::get('mts_AlgApi_RegistrationType'));
+
+        Configuration::deleteByName('mts_AlgApi_SmartyForceCompileBK');
+        Configuration::deleteByName('mts_AlgApi_B2BModeBK');
+        Configuration::deleteByName('mts_AlgApi_RegistrationType');
+
 
         include(dirname(__FILE__) . '/sql/uninstall.php');
 
@@ -467,5 +488,10 @@ class Mtsalegraapi extends Module
             $this->context->controller->addCSS($this->_path . '/views/css/front.css');
             $this->context->controller->addJS($this->_path . '/views/js/front.js');
         }
+    }
+
+    public function hookDisplayCustomerAccountForm()
+    {
+        $this->context->controller->addJS($this->_path . '/views/js/account.js');
     }
 }
