@@ -648,21 +648,13 @@
             <div class="account_creation">
                 <h3 class="page-subheading">{l s='Your company information'}</h3>
                 <p class="form-group">
-                    <label for="legal_type">{l s='Tipo de Persona' mod='mtsalegraapi'}<sup>*</sup></label>
-                    <select class="form-control" id="legal_type" name="legal_type">
-                        <option value="invalid">{l s='--' mod='mtsalegraapi'}</option>
-                        <option value="PN">{l s='Persona Natural' mod='mtsalegraapi'}</option>
-                        <option value="PJ">{l s='Persona Jurídica' mod='mtsalegraapi'}</option>
-                    </select>
-                </p>
-                <p class="form-group">
                     <label for="">{l s='Nombre o Razón Social' mod='mtsalegraapi'}<sup>*</sup></label>
                     <input type="text" class="form-control" id="company" name="company"
                            value="{if isset($smarty.post.company)}{$smarty.post.company}{/if}"/>
-                    <span>{l s='A nombre de quién quedará la factura' mod='mtsalegraapi'}</span>
+                    <span>{l s='A nombre de quién quedará la factura.' mod='mtsalegraapi'}</span>
                 </p>
                 <p class="form-group">
-                    <label for="legal_type">{l s='Tipo de documento' mod='mtsalegraapi'}<sup>*</sup></label>
+                    <label for="ape">{l s='Tipo de documento' mod='mtsalegraapi'}<sup>*</sup></label>
                     <select class="form-control" id="ape" name="ape">
                         <option value="invalid">{l s='--' mod='mtsalegraapi'}</option>
                         <option value="CC">{l s='CC' mod='mtsalegraapi'}</option>
@@ -680,6 +672,7 @@
                     <label for="siret">{l s='Número de documento' mod='mtsalegraapi'}<sup>*</sup></label>
                     <input type="text" class="form-control" id="siret" name="siret"
                            value="{if isset($smarty.post.siret)}{$smarty.post.siret}{/if}"/>
+                    <span>{l s='Sin puntos. Si es NIT, incluya el guión (-) y el número de verificación. Ej: 900000000-0' mod='mtsalegraapi'}</span>
                 </p>
                 <p class="form-group">
                     <label for="website">{l s='Website'}</label>
