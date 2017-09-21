@@ -49,9 +49,7 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mtsalegraapi_contacts` 
     `id_contact_store` INT(11) NOT NULL,
     `id_contact_alegra` INT(11) NULL,
     `contact_ignored` BOOLEAN,
-    `dni` VARCHAR(25),
     `alias` VARCHAR(100),
-    `state` VARCHAR(100),
     `observations` VARCHAR(255),
     PRIMARY KEY  (`id_contact_store`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
