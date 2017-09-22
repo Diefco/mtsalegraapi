@@ -30,6 +30,8 @@
 
 class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontController
 {
+    public $urlApi = 'contacts';
+
     public function initContent()
     {
         parent::initContent();
@@ -51,17 +53,184 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
             'contact_ignored'
         );
 
+        if (count($mts_join) > 0) {
+            $customerData = $this->prepareData($mts_join);
+            $this->context->smarty->assign('customers', $customerData);
+
+            if (Tools::isSubmit('CustomerCreate')) {
+                $this->processCustomerCreate($customerData);
+                Tools::redirect($this->context->link->getModuleLink(
+                    'mtsalegraapi',
+                    'contactCreate',
+                    array(),
+                    Configuration::get('PS_SSL_ENABLED')
+                ));
+            }
+        }
+
+        $this->context->smarty->assign('backLink', $this->context->link->getModuleLink(
+            'mtsalegraapi',
+            'home',
+            array(),
+            Configuration::get('PS_SSL_ENABLED')
+        ));
+        $this->setTemplate('contacts/create.tpl');
+    }
+
+    private function validateCookieAuth($cookie)
+    {
+        if ($cookie->auth != true) {
+            Tools::redirect($this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'login',
+                array(),
+                Configuration::get('PS_SSL_ENABLED')
+            ));
+        }
+    }
+
+    private function getApiAuthToken()
+    {
+        /**
+         * !!!DISCLAIMER!!!
+         * https://developer.alegra.com/v1/docs/autenticacion
+         * Base64 encoding required from ALegra API: Must be used to generate an Authentication Token.
+         * Otherwise, this module will not work properly.
+         */
+
+        $authToken = base64_encode(
+            Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token')
+        );
+
+        return $authToken;
+    }
+
+    private function firstCustomerCall()
+    {
+        $mts_contact = $this->dbQuery(
+            'id_contact_store',
+            'mtsalegraapi_contacts',
+            null,
+            'id_contact_store',
+            1
+        );
+
+        if (count($mts_contact) == 0) {
+            $store_contact = $this->dbQuery(
+                array(
+                    'id_customer',
+                    'firstname',
+                    'lastname',
+                    'email'
+                ),
+                'customer',
+                null,
+                'id_customer',
+                1
+            );
+
+            //  First Execution (Module recently installed)
+            if (count($store_contact) > 0 &&
+                $store_contact[0]['id_customer'] == 1 &&
+                $store_contact[0]['firstname'] = "John" &&
+                    $store_contact[0]['lastname'] = "DOE" &&
+                        $store_contact[0]['email'] = "pub@prestashop.com"
+            ) {
+                $this->dbInsert(
+                    'mtsalegraapi_contacts',
+                    array(
+                        'id_contact_store' => 1,
+                        'id_contact_alegra' => 0,
+                        'contact_ignored' => true,
+                        'observations' => 'Customer Demo'
+                    )
+                );
+            }
+        }
+    }
+
+    private function dbQueryJoin($select, $from, $leftColumn, $leftTable, $leftWhere_1, $leftWhere_2, $orderBy = null, $alias = null)
+    {
+        // Get the limit number to send a DB Query.
+        $limitQuery = Configuration::get('mts_AlgApi_limitQuery');
+
+        $rightTable = $from;
+
+        if (is_array($select)) {
+            $rightColumn = $select[0];
+            $select_query = implode(', ', $select);
+        } else {
+            $select_query = $select;
+            $rightColumn = $select;
+        }
+
+
+        $sql = new DbQuery();
+        $sql
+            ->select($select_query)
+            ->from($from)
+            ->leftJoin(
+                $leftTable,
+                $alias,
+                _DB_PREFIX_ . $rightTable . '.' . $rightColumn . ' = ' .
+                _DB_PREFIX_ . $leftTable . '.' . $leftColumn
+            )
+            ->where(
+                _DB_PREFIX_ . $leftTable . '.' . $leftWhere_1 . ' is NULL ||' .
+                _DB_PREFIX_ . $leftTable . '.' . $leftWhere_2 . ' is NULL'
+            )
+            ->limit($limitQuery);
+        if ($orderBy != null) {
+            $sql->orderBy($orderBy);
+        }
+        return Db::getInstance()->executeS($sql);
+    }
+
+    private function dbQuery($select, $from, $where = null, $orderBy = null, $limit = null)
+    {
+        if (is_array($select)) {
+            $select_query = implode(', ', $select);
+        } else {
+            $select_query = $select;
+        }
+
+        $sql = new DbQuery();
+        $sql->select($select_query)
+            ->from($from);
+
+        if ($where != null) {
+            $sql->where($where);
+        }
+
+        if ($orderBy != null) {
+            $sql->orderBy($orderBy);
+        }
+
+        if ($limit != null) {
+            $sql->limit($limit);
+        }
+
+        return Db::getInstance()->executeS($sql);
+    }
+
+    private function dbInsert($table, $data)
+    {
+        return Db::getInstance()->insert($table, $data);
+    }
+
+    private function prepareData($joinResult)
+    {
         $contactArray = array();
 
         $contactIdWhereQuery = '';
 
-        if (count($mts_join) == 1) {
-            $contactIdWhereQuery .= 'id_customer=' . $mts_join[0]['id_customer'];
-        } elseif (count($mts_join) > 1) {
-            for ($i = 0; $i < count($mts_join) - 1; $i++) {
-                $contactIdWhereQuery .= 'id_customer=' . $mts_join[$i]['id_customer'] . ' || ';
+        if (count($joinResult) == 1) {
+            $contactIdWhereQuery .= 'id_customer=' . $joinResult[0]['id_customer'];
+        } elseif (count($joinResult) > 1) {
+            for ($i = 0; $i < count($joinResult) - 1; $i++) {
+                $contactIdWhereQuery .= 'id_customer=' . $joinResult[$i]['id_customer'] . ' || ';
             }
-            $contactIdWhereQuery .= 'id_customer=' . $mts_join[count($mts_join) - 1]['id_customer'];
+            $contactIdWhereQuery .= 'id_customer=' . $joinResult[count($joinResult) - 1]['id_customer'];
         }
 
         $contactBasicInfo = $this->dbQuery(
@@ -71,7 +240,8 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
                 'lastname',
                 'email',
                 'siret',
-                'ape'
+                'ape',
+                'company'
             ),
             'customer',
             $contactIdWhereQuery,
@@ -130,7 +300,7 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
                 }
 
                 $contactArray[$contact['id_customer']] = array(
-                    'name' => $contact['firstname'] . ' ' . $contact['lastname'],
+                    'name' => $contact['company'],
                     'identification' => $contact['siret'],
                     'email' => $contact['email'],
                     'phonePrimary' => $addressArray[0]['phone'],
@@ -140,121 +310,73 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
                         'address' => $addressComplete,
                         'city' => $cityComplete
                     ),
-                    'observations' => $contact['ape'],
+                    'internalContacts' => array(
+                        array(
+                            'name' => $contact['firstname'],
+                            'lstName' => $contact['lastname'],
+                            'email' => $contact['email'],
+                            'phone' => $addressArray[0]['phone'],
+                            'mobile' => $addressArray[0]['phone_mobile'],
+                            'sendNotifications' => false
+                        ),
+                    ),
+                    'observations' => 'Tipo de Documento: ' . $contact['ape'] . ' | ',
                 );
             }
         }
-        $this->printer($contactArray, __LINE__);
+
+        return $contactArray;
     }
 
-    private function validateCookieAuth($cookie)
+    private function processCustomerCreate($customerData)
     {
-        if ($cookie->auth != true) {
-            Tools::redirect($this->context->link->getModuleLink(
-                'mtsalegraapi',
-                'login',
-                array(),
-                Configuration::get('PS_SSL_ENABLED')
-            ));
-        }
-    }
+        $postValues = Tools::getAllValues();
+        $keys = array_keys($postValues);
 
-    private function getApiAuthToken()
-    {
-        /**
-         * !!!DISCLAIMER!!!
-         * https://developer.alegra.com/v1/docs/autenticacion
-         * Base64 encoding required from ALegra API: Must be used to generate an Authentication Token.
-         * Otherwise, this module will not work properly.
-         */
-
-        $authToken = base64_encode(
-            Configuration::get('mts_AlgApi_Email') . ':' . Configuration::get('mts_AlgApi_Token')
-        );
-
-        return $authToken;
-    }
-
-    private function firstCustomerCall()
-    {
-        $sql = new DbQuery();
-        $sql
-            ->select('id_contact_store')
-            ->from('mtsalegraapi_contacts')
-            ->limit('1')
-            ->orderBy('id_contact_store');
-        $mts_contact = Db::getInstance()->executeS($sql);
-
-        if (count($mts_contact) == 0) {
-            $sql = new DbQuery();
-            $sql
-                ->select('id_customer, firstname, lastname, email')
-                ->from('customer')
-                ->limit('1')
-                ->orderBy('id_customer');
-            $store_contact = Db::getInstance()->executeS($sql);
-
-            //  First Execution (Module recently installed)
-            if (count($store_contact) > 0 &&
-                $store_contact[0]['id_customer'] == 1 &&
-                $store_contact[0]['firstname'] = "John" &&
-                    $store_contact[0]['lastname'] = "DOE" &&
-                        $store_contact[0]['email'] = "pub@prestashop.com"
-            ) {
-                Db::getInstance()->insert('mtsalegraapi_contacts', array(
-                    'id_contact_store' => 1,
-                    'id_contact_alegra' => 0,
-                    'contact_ignored' => true
-                ));
+        $customers = array();
+        foreach ($keys as $key) {
+            if ($key != 'fc' && $key != 'controller' && $key != 'module' && $key != 'CustomerCreate') {
+                if (Tools::strrpos($key, 'customer_option') !== false) {
+                    $value = explode('_', $key);
+                    $customerData[$value[2]]['observations'] .= Tools::getValue('customer_observations_' . $value[2]);
+                    if (Tools::getValue($key) == 'upload') {
+                        $customers[] = $value[2];
+                    } elseif (Tools::getValue($key) == 'ignore') {
+                        $this->dbInsert(
+                            'mtsalegraapi_contacts',
+                            array(
+                                'id_contact_store' => $value[2],
+                                'id_contact_alegra' => 0,
+                                'contact_ignored' => 1,
+                                'observations' => $customerData[$value[2]]['observations']
+                            )
+                        );
+                    }
+                }
             }
         }
-    }
 
-    private function dbQueryJoin($rightColumn, $rightTable, $leftColumn, $leftTable, $leftWhere_1, $leftWhere_2, $alias = null)
-    {
-        // Get the limit number to send a DB Query.
-        $limitQuery = Configuration::get('mts_AlgApi_limitQuery');
+        $request = array();
 
-        if (is_array($rightColumn)) {
-            return false;
+        foreach ($customers as $key) {
+            $request[$key] = $this->sendToApi($this->urlApi, 'post', $customerData[$key]);
         }
 
-        $sql = new DbQuery();
-        $sql
-            ->select($rightColumn)
-            ->from($rightTable)
-            ->leftJoin(
-                $leftTable,
-                $alias,
-                _DB_PREFIX_ . $rightTable . '.' . $rightColumn . ' = ' .
-                _DB_PREFIX_ . $leftTable . '.' . $leftColumn
-            )
-            ->where(
-                _DB_PREFIX_ . $leftTable . '.' . $leftWhere_1 . ' is NULL ||' .
-                _DB_PREFIX_ . $leftTable . '.' . $leftWhere_2 . ' is NULL'
-            )
-            ->limit($limitQuery)
-            ->orderBy('id_customer');
-        return Db::getInstance()->executeS($sql);
-    }
-
-    private function dbQuery($select_array, $table, $where, $orderBy = null)
-    {
-        if (is_array($select_array)) {
-            $select = implode(', ', $select_array);
-        } else {
-            $select = $select_array;
+        if (count($request) > 0) {
+            foreach ($request as $customer => $data) {
+                if ($data[0] == true) {
+                    $this->dbInsert(
+                        'mtsalegraapi_contacts',
+                        array(
+                            'id_contact_store' => $customer,
+                            'id_contact_alegra' => $data[1]['id'],
+                            'contact_ignored' => 0,
+                            'observations' => $data[1]['observations']
+                        )
+                    );
+                }
+            }
         }
-
-        $sql = new DbQuery();
-        $sql->select($select)
-            ->from($table)
-            ->where($where);
-        if ($orderBy != null) {
-            $sql->orderBy('id_customer');
-        }
-
-        return Db::getInstance()->executeS($sql);
     }
 
     private function sendToApi($url, $method, $request = null)
@@ -330,7 +452,7 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         return array(true, $requestData);
     }
 
-    public function printer($var, $line = false, $die = true, $debug = false)
+    private function printer($var, $line = false, $die = true, $debug = false)
     {
         echo "<pre>";
         if ($debug) {
