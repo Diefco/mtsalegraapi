@@ -30,6 +30,8 @@
 
 class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontController
 {
+    public $urlApi = 'items';
+
     public function initContent()
     {
         parent::initContent();
@@ -39,216 +41,29 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         // Validate if the current user is Authorized.
         $this->validateCookieAuth($cookie);
 
-        // Get the limit number to send a DB Query.
-        $limitQuery = Configuration::get('mts_AlgApi_limitQuery');
-
         // Execute the auto-ignore for Demo products
         $this->firstProductsCall();
 
+        $mts_join = $this->dbQueryJoin(
+            array(
+                'id_product',
+                'reference',
+                'id_tax_rules_group'
+            ),
+            'product',
+            'id_product_store',
+            'mtsalegraapi_products',
+            'id_product_alegra',
+            'product_ignored',
+            'id_product'
+        );
 
+        if (count($mts_join) > 0) {
+            $productData = $this->prepareData($mts_join);
+            $this->context->smarty->assign('products', $productData);
 
-        $sql = new DbQuery();
-        $sql->select('id_product, reference, id_tax_rules_group')
-            ->from('product')
-            ->leftJoin(
-                'mtsalegraapi_products',
-                null,
-                'ps_product.id_product = ps_mtsalegraapi_products.id_product_store'
-            )
-            ->where(
-                'ps_mtsalegraapi_products.id_product_alegra is NULL || 
-                ps_mtsalegraapi_products.product_ignored is NULL'
-            )
-            ->limit($limitQuery)
-            ->orderBy('id_product');
-        $mts_join = Db::getInstance()->executeS($sql);
-
-
-        // Get the list with all taxes registered in the Store
-        $sql = new DbQuery();
-        $sql->select('id_tax, rate')
-            ->from('tax')
-            ->orderBy('id_tax');
-        $taxesStoreArray = Db::getInstance()->executeS($sql);
-
-        // Get the name of the registered taxes in the Store
-        $sql = new DbQuery();
-        $sql->select('id_tax, name')
-            ->from('tax_lang')
-            ->where('id_lang = 1')
-            ->orderBy('id_tax');
-        $nameTaxes = Db::getInstance()->executeS($sql);
-
-        foreach ($taxesStoreArray as $index => $tax) {
-            if ($tax['id_tax'] === $nameTaxes[$index]['id_tax']) {
-                $taxesStoreArray[$index]['name'] = $nameTaxes[$index]['name'];
-            }
-        }
-
-        $taxesAlegraArray = $this->sendToApi('taxes', 'get', null);
-
-        $productsArray = array();
-
-        if ($taxesAlegraArray[0]) {
-            $relatedTaxes = array();
-
-            foreach ($taxesAlegraArray[1] as $alegraIndex => $alegraTax) {
-                foreach ($taxesStoreArray as $storeIndex => $storeTax) {
-                    $storeTaxRate = filter_var($storeTax['rate'], FILTER_VALIDATE_FLOAT);
-                    $alegraTaxRate = filter_var($alegraTax['percentage'], FILTER_VALIDATE_FLOAT);
-                    if (stristr($storeTax['name'], $alegraTax['name']) !== false &&
-                        $storeTaxRate == $alegraTaxRate) {
-                        $relatedTaxes[] = array(
-                            'id_tax_alegra' => $alegraTax['id'],
-                            'id_tax_store' => $storeTax['id_tax'],
-                            'tax_value' => $storeTaxRate,
-                            'tax_name' => $alegraTax['name'],
-                        );
-                    }
-                }
-            }
-
-            foreach ($mts_join as $indexProduct => $product) {
-                $productsArray[$product['id_product']] = array(
-                    'name' => null,
-                    'description' => null,
-                    'reference' => null,
-                    'inventory' => array(
-                        'unit' => null,
-                        'unitCost' => null,
-                        'initialQuantity' => null,
-                    ),
-                    'tax' => array(
-                        'alegra' => null,
-                        'store' => null,
-                        'value' => null,
-                        'name' => null,
-                    ),
-                    'price' => null
-                );
-                // Get the short description for each product
-                $sql = new DbQuery();
-                $sql->select('description_short, name')
-                    ->from('product_lang')
-                    ->where('id_product = ' . $product['id_product'] . ' && id_lang = 1')
-                    ->limit('1');
-                $descriptionArray = Db::getInstance()->executeS($sql);
-
-                // Get the price for each product (without attributes)
-                $sql = new DbQuery();
-                $sql->select('price, wholesale_price')
-                    ->from('product_shop')
-                    ->where('id_product = ' . $product['id_product'])
-                    ->limit('1');
-                $priceArray = Db::getInstance()->executeS($sql);
-
-                // Get the quantity for each product (without attributes)
-                $sql = new DbQuery();
-                $sql->select('quantity')
-                    ->from('stock_available')
-                    ->where('id_product = ' . $product['id_product'])
-                    ->limit('1');
-                $quantityArray = Db::getInstance()->executeS($sql);
-
-                // Get the tax rules registered in the Store
-                $sql = new DbQuery();
-                $sql->select('id_tax_rules_group, id_tax, behavior')
-                    ->from('tax_rule')
-                    ->where('id_tax_rules_group = ' . $product['id_tax_rules_group']);
-                $taxRulesArray = Db::getInstance()->executeS($sql);
-
-                if (count($taxRulesArray) != 1 || (
-                        $taxRulesArray[0]['behavior'] != 0 || $taxRulesArray[0]['behavior'] != '0'
-                    )
-                ) {
-                    $taxException = true;
-                } else {
-                    $taxException = false;
-                }
-
-                $productsArray[$product['id_product']]['name'] = filter_var(
-                    strip_tags($descriptionArray[0]['name']),
-                    FILTER_SANITIZE_FULL_SPECIAL_CHARS,
-                    FILTER_FLAG_NO_ENCODE_QUOTES
-                );
-                $productsArray[$product['id_product']]['description'] = filter_var(
-                    strip_tags($descriptionArray[0]['description_short']),
-                    FILTER_SANITIZE_FULL_SPECIAL_CHARS,
-                    FILTER_FLAG_NO_ENCODE_QUOTES
-                );
-                $productsArray[$product['id_product']]['reference'] = filter_var(
-                    strip_tags($mts_join[$indexProduct]['reference']),
-                    FILTER_SANITIZE_FULL_SPECIAL_CHARS,
-                    FILTER_FLAG_NO_ENCODE_QUOTES
-                );
-                $productsArray[$product['id_product']]['inventory']['unitCost'] = filter_var(
-                    $priceArray[0]['wholesale_price'],
-                    FILTER_VALIDATE_FLOAT
-                );
-                $productsArray[$product['id_product']]['inventory']['initialQuantity'] = filter_var(
-                    $quantityArray[0]['quantity'],
-                    FILTER_VALIDATE_INT
-                );
-
-                if (!$taxException) {
-                    foreach ($relatedTaxes as $indexRelatedTax => $relatedTax) {
-                        if ($taxRulesArray[0]['id_tax'] == $relatedTax['id_tax_store']) {
-                            $productsArray[$product['id_product']]['tax']['alegra'] = filter_var(
-                                $relatedTax['id_tax_alegra'],
-                                FILTER_VALIDATE_INT
-                            );
-                            $productsArray[$product['id_product']]['tax']['store'] = filter_var(
-                                $relatedTax['id_tax_store'],
-                                FILTER_VALIDATE_INT
-                            );
-                            $productsArray[$product['id_product']]['tax']['value'] = filter_var(
-                                $relatedTax['tax_value'],
-                                FILTER_VALIDATE_INT
-                            );
-                            $productsArray[$product['id_product']]['tax']['name'] = $relatedTax['tax_name'];
-                        }
-                    }
-                }
-                $productsArray[$product['id_product']]['price'] = filter_var(
-                    $priceArray[0]['price'],
-                    FILTER_VALIDATE_FLOAT
-                );
-            }
-
-            $postValues = Tools::getAllValues();
-
-            if (count($postValues) > 3) {
-                $apiResponse = $this->validatePostValues(array_keys($productsArray));
-
-                foreach ($apiResponse as $idProduct => $response) {
-                    $this->printer($response, false, false);
-                    if (gettype($response) == 'array') {
-                        // Errores o respuesta de la API
-                        if ($response[0] == false) {
-                            $this->context->smarty->assign(
-                                'errorMsg',
-                                $response[1]['message'] . '. ID Product: ' . $idProduct
-                            );
-                        } else {
-                            $products = array(
-                                'id_product_store' => $idProduct,
-                                'id_product_alegra' => $response[1]['id'],
-                                'product_ignored' => false
-                            );
-                            Db::getInstance()->insert('mtsalegraapi_products', $products);
-                        }
-                    } elseif (gettype($response) == 'string' && $response == 'ignored') {
-                        // Ignorar producto
-                        $products = array(
-                            'id_product_store' => $idProduct,
-                            'id_product_alegra' => 0,
-                            'product_ignored' => true
-                        );
-                        Db::getInstance()->insert('mtsalegraapi_products', $products);
-                    } else {
-                        $this->context->smarty->assign('errorMsg', 'No se ha realizado ninguna acción.');
-                    }
-                }
+            if (Tools::isSubmit('ProductCreate')) {
+                $this->processProductCreate($productData);
                 Tools::redirect($this->context->link->getModuleLink(
                     'mtsalegraapi',
                     'productCreate',
@@ -256,8 +71,6 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                     Configuration::get('PS_SSL_ENABLED')
                 ));
             }
-
-            $this->context->smarty->assign('products', $productsArray);
         }
 
         $this->context->smarty->assign('backLink', $this->context->link->getModuleLink(
@@ -299,19 +112,22 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
 
     private function firstProductsCall()
     {
-        $sql = new DbQuery();
-        $sql->select('id_product_store')
-            ->from('mtsalegraapi_products')
-            ->limit('1');
-        $mts_product = Db::getInstance()->executeS($sql);
+        $mts_product = $this->dbQuery(
+            'id_product_store',
+            'mtsalegraapi_products',
+            null,
+            null,
+            1
+        );
 
         if (count($mts_product) == 0) {
-            $sql = new DbQuery();
-            $sql->select('id_product, reference')
-                ->from('product')
-                ->limit('7')
-                ->orderBy('id_product');
-            $store_product = Db::getInstance()->executeS($sql);
+            $store_product = $this->dbQuery(
+                'id_product, reference',
+                'product',
+                null,
+                'id_product',
+                7
+            );
 
             //  First Execution (Module recently installed)
             if (count($store_product) > 0 &&
@@ -327,7 +143,8 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                     $products[] = array(
                         'id_product_store' => $i,
                         'id_product_alegra' => 0,
-                        'product_ignored' => true
+                        'product_ignored' => true,
+                        'observations' => 'Product Demo'
                     );
                 }
 
@@ -336,78 +153,297 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         }
     }
 
-    private function validatePostValues($productsKeys)
+    private function dbQueryJoin($select, $from, $leftColumn, $leftTable, $leftWhere_1, $leftWhere_2, $orderBy = null, $alias = null)
     {
-        $productToSend = array();
-        $respuesta = array();
+        // Get the limit number to send a DB Query.
+        $limitQuery = Configuration::get('mts_AlgApi_limitQuery');
 
-        foreach ($productsKeys as $idProduct) {
-            if (Tools::getIsset('product_' . $idProduct . '_option') &&
-                Tools::getValue('product_' . $idProduct . '_option') == 'upload'
-            ) {
-                $productToSend[$idProduct] = array(
-                    'name' => null,
-                    'description' => null,
-                    'reference' => null,
-                    'inventory' => array(
-                        'unit' => null,
-                        'unitCost' => null,
-                        'initialQuantity' => null,
-                    ),
-                    'tax' => null,
-                    'price' => null,
-                );
+        $rightTable = $from;
 
-                if (Tools::getIsset('product_' . $idProduct . '_name')) {
-                    $productToSend[$idProduct]['name'] =
-                        Tools::getValue('product_' . $idProduct . '_name');
-                }
+        if (is_array($select)) {
+            $rightColumn = $select[0];
+            $select_query = implode(', ', $select);
+        } else {
+            $select_query = $select;
+            $rightColumn = $select;
+        }
 
-                if (Tools::getIsset('product_' . $idProduct . '_description')) {
-                    $productToSend[$idProduct]['description'] =
-                        Tools::getValue('product_' . $idProduct . '_description');
-                }
 
-                if (Tools::getIsset('product_' . $idProduct . '_reference')) {
-                    $productToSend[$idProduct]['reference'] =
-                        Tools::getValue('product_' . $idProduct . '_reference');
-                }
+        $sql = new DbQuery();
+        $sql
+            ->select($select_query)
+            ->from($from)
+            ->leftJoin(
+                $leftTable,
+                $alias,
+                _DB_PREFIX_ . $rightTable . '.' . $rightColumn . ' = ' .
+                _DB_PREFIX_ . $leftTable . '.' . $leftColumn
+            )
+            ->where(
+                _DB_PREFIX_ . $leftTable . '.' . $leftWhere_1 . ' is NULL ||' .
+                _DB_PREFIX_ . $leftTable . '.' . $leftWhere_2 . ' is NULL'
+            )
+            ->limit($limitQuery);
+        if ($orderBy != null) {
+            $sql->orderBy($orderBy);
+        }
+        return Db::getInstance()->executeS($sql);
+    }
 
-                if (Tools::getIsset('product_' . $idProduct . '_unit')) {
-                    $productToSend[$idProduct]['inventory']['unit'] =
-                        Tools::getValue('product_' . $idProduct . '_unit');
-                }
+    private function dbQuery($select, $from, $where = null, $orderBy = null, $limit = null)
+    {
+        if (is_array($select)) {
+            $select_query = implode(', ', $select);
+        } else {
+            $select_query = $select;
+        }
 
-                if (Tools::getIsset('product_' . $idProduct . '_unitCost')) {
-                    $productToSend[$idProduct]['inventory']['unitCost'] =
-                        (int)Tools::getValue('product_' . $idProduct . '_unitCost');
-                }
+        $sql = new DbQuery();
+        $sql->select($select_query)
+            ->from($from);
 
-                if (Tools::getIsset('product_' . $idProduct . '_initialQuantity')) {
-                    $productToSend[$idProduct]['inventory']['initialQuantity'] =
-                        (int)Tools::getValue('product_' . $idProduct . '_initialQuantity');
-                }
+        if ($where != null) {
+            $sql->where($where);
+        }
 
-                if (Tools::getIsset('product_' . $idProduct . '_tax')) {
-                    $productToSend[$idProduct]['tax'] =
-                        (int)Tools::getValue('product_' . $idProduct . '_tax');
-                }
+        if ($orderBy != null) {
+            $sql->orderBy($orderBy);
+        }
 
-                if (Tools::getIsset('product_' . $idProduct . '_price')) {
-                    $productToSend[$idProduct]['price'] =
-                        (int)Tools::getValue('product_' . $idProduct . '_price');
-                }
+        if ($limit != null) {
+            $sql->limit($limit);
+        }
 
-                $respuesta[$idProduct] = $this->sendToApi('items', 'post', $productToSend[$idProduct]);
-            } elseif (Tools::getIsset('product_' . $idProduct . '_option') &&
-                Tools::getValue('product_' . $idProduct . '_option') == 'ignore'
-            ) {
-                $respuesta[$idProduct] = 'ignored';
-            } else {
-                    $respuesta[$idProduct] = 'nothing';
+        return Db::getInstance()->executeS($sql);
+    }
+
+    private function dbInsert($table, $data)
+    {
+        return Db::getInstance()->insert($table, $data);
+    }
+
+    private function prepareData($joinResult)
+    {
+        $taxesStoreArray = $this->dbQuery(
+            array(
+                'id_tax',
+                'rate'
+            ),
+            'tax',
+            null,
+            'id_tax'
+        );
+
+        $nameTaxes = $this->dbQuery(
+            array(
+                'id_tax',
+                'name'
+            ),
+            'tax_lang',
+            'id_lang = 1',
+            'id_tax'
+        );
+
+        foreach ($taxesStoreArray as $index => $tax) {
+            if ($tax['id_tax'] === $nameTaxes[$index]['id_tax']) {
+                $taxesStoreArray[$index]['name'] = $nameTaxes[$index]['name'];
             }
         }
-        return $respuesta;
+
+        $taxesAlegraArray = $this->sendToApi('taxes', 'get', null);
+
+        $productsArray = array();
+
+        if ($taxesAlegraArray[0]) {
+            $relatedTaxes = array();
+
+            foreach ($taxesAlegraArray[1] as $alegraIndex => $alegraTax) {
+                foreach ($taxesStoreArray as $storeIndex => $storeTax) {
+                    $storeTaxRate = filter_var($storeTax['rate'], FILTER_VALIDATE_FLOAT);
+                    $alegraTaxRate = filter_var($alegraTax['percentage'], FILTER_VALIDATE_FLOAT);
+                    if (stristr($storeTax['name'], $alegraTax['name']) !== false &&
+                        $storeTaxRate == $alegraTaxRate) {
+                        $relatedTaxes[] = array(
+                            'id_tax_alegra' => $alegraTax['id'],
+                            'id_tax_store' => $storeTax['id_tax'],
+                            'tax_value' => $storeTaxRate,
+                            'tax_name' => $alegraTax['name'],
+                        );
+                    }
+                }
+            }
+
+            foreach ($joinResult as $indexProduct => $product) {
+                // Get the short description for each product
+                $descriptionArray = $this->dbQuery(
+                    array(
+                        'description_short',
+                        'name'
+                    ),
+                    'product_lang',
+                    'id_product = ' . $product['id_product'] . ' && id_lang = 1',
+                    null,
+                    1
+                );
+
+                // Get the price for each product (without attributes)
+                $priceArray = $this->dbQuery(
+                    array(
+                        'price',
+                        'wholesale_price'
+                    ),
+                    'product_shop',
+                    'id_product = ' . $product['id_product'],
+                    null,
+                    1
+                );
+
+                // Get the quantity for each product (without attributes)
+                $quantityArray = $this->dbQuery(
+                    'quantity',
+                    'stock_available',
+                    'id_product = ' . $product['id_product'],
+                    null,
+                    1
+                );
+
+                // Get the tax rules registered in the Store
+                $taxRulesArray = $this->dbQuery(
+                    array(
+                        'id_tax_rules_group',
+                        'id_tax',
+                        'behavior'
+                    ),
+                    'tax_rule',
+                    'id_tax_rules_group = ' . $product['id_tax_rules_group']
+                );
+
+                if (count($taxRulesArray) != 1 || (
+                        $taxRulesArray[0]['behavior'] != 0 || $taxRulesArray[0]['behavior'] != '0'
+                    )
+                ) {
+                    $taxException = true;
+                } else {
+                    $taxException = false;
+                }
+
+                if (!$taxException) {
+                    foreach ($relatedTaxes as $indexRelatedTax => $relatedTax) {
+                        if ($taxRulesArray[0]['id_tax'] == $relatedTax['id_tax_store']) {
+                            $taxAlegra = filter_var(
+                                $relatedTax['id_tax_alegra'],
+                                FILTER_VALIDATE_INT
+                            );
+                            $taxStore = filter_var(
+                                $relatedTax['id_tax_store'],
+                                FILTER_VALIDATE_INT
+                            );
+                            $taxValue = filter_var(
+                                $relatedTax['tax_value'],
+                                FILTER_VALIDATE_INT
+                            );
+                            $taxName = $relatedTax['tax_name'];
+                        }
+                    }
+                }
+
+                $productsArray[$product['id_product']] = array(
+                    'name' => filter_var(
+                        strip_tags($descriptionArray[0]['name']),
+                        FILTER_SANITIZE_FULL_SPECIAL_CHARS,
+                        FILTER_FLAG_NO_ENCODE_QUOTES
+                    ),
+                    'description' => filter_var(
+                        strip_tags($descriptionArray[0]['description_short']),
+                        FILTER_SANITIZE_FULL_SPECIAL_CHARS,
+                        FILTER_FLAG_NO_ENCODE_QUOTES
+                    ),
+                    'reference' => filter_var(
+                        strip_tags($joinResult[$indexProduct]['reference']),
+                        FILTER_SANITIZE_FULL_SPECIAL_CHARS,
+                        FILTER_FLAG_NO_ENCODE_QUOTES
+                    ),
+                    'inventory' => array(
+                        'unit' => null,
+                        'unitCost' => filter_var(
+                            $priceArray[0]['wholesale_price'],
+                            FILTER_VALIDATE_FLOAT
+                        ),
+                        'initialQuantity' => filter_var(
+                            $quantityArray[0]['quantity'],
+                            FILTER_VALIDATE_INT
+                        ),
+                    ),
+                    'tax' => array(
+                        'alegra' => $taxAlegra,
+                        'store' => $taxStore,
+                        'value' => $taxValue,
+                        'name' => $taxName,
+                    ),
+                    'price' => filter_var(
+                        $priceArray[0]['price'],
+                        FILTER_VALIDATE_FLOAT
+                    )
+                );
+            }
+        }
+
+        return $productsArray;
+    }
+
+    private function processProductCreate($productData)
+    {
+        $postValues = Tools::getAllValues();
+        $keys = array_keys($postValues);
+
+        $products = array();
+        $observations = array();
+        foreach ($keys as $key) {
+            if ($key != 'fc' && $key != 'controller' && $key != 'module' && $key != 'ProductCreate') {
+                if (Tools::strrpos($key, 'product_option') !== false) {
+                    $value = explode('_', $key);
+                    $productData[$value[2]]['tax'] = $productData[$value[2]]['tax']['alegra'];
+                    $productData[$value[2]]['inventory']['unit'] = Tools::getValue('product_unit_' . $value[2]);
+                    $observations[$value[2]] = 'Unidad: ' . Tools::getValue('product_unit_' . $value[2]) . ' | ' .
+                        Tools::getValue('product_observations_' . $value[2]);
+                    if (Tools::getValue($key) == 'upload') {
+                        $products[] = $value[2];
+                    } elseif (Tools::getValue($key) == 'ignore') {
+                        $this->dbInsert(
+                            'mtsalegraapi_products',
+                            array(
+                                'id_product_store' => $value[2],
+                                'id_product_alegra' => 0,
+                                'product_ignored' => 1,
+                                'observations' => $observations[$value[2]]
+                            )
+                        );
+                    }
+                }
+            }
+        }
+
+        $request = array();
+
+        foreach ($products as $key) {
+            $request[$key] = $this->sendToApi($this->urlApi, 'post', $productData[$key]);
+        }
+
+        if (count($request) > 0) {
+            foreach ($request as $customer => $data) {
+                if ($data[0] == true) {
+                    $this->dbInsert(
+                        'mtsalegraapi_products',
+                        array(
+                            'id_product_store' => $customer,
+                            'id_product_alegra' => $data[1]['id'],
+                            'product_ignored' => 0,
+                            'observations' => $observations[$customer]
+                        )
+                    );
+                }
+            }
+        }
     }
 
     private function sendToApi($url, $method, $request = null)
@@ -453,7 +489,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         $jsonRequest = json_encode($request);
         $authToken = $this->getApiAuthToken();
 
-        $urlRequest = 'https://app.alegra.com/api/v1/'.$url.'/';
+        $urlRequest = 'https://app.alegra.com/api/v1/' . $url . '/';
         $headers = array(
             'Accept: application/json',
             'Content-Type: application/json; charset=utf-8',
@@ -483,7 +519,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         return array(true, $requestData);
     }
 
-    public function printer($var, $line = false, $die = true, $debug = false)
+    private function printer($var, $line = false, $die = true, $debug = false)
     {
         echo "<pre>";
         if ($debug) {
@@ -492,7 +528,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
             print_r($var);
         }
         if ($line) {
-            print_r("<br>" .gettype($var) . ' en la línea ' . $line);
+            print_r("<br>" . gettype($var) . ' en la línea ' . $line);
         }
         echo "<br></pre>";
         if ($die) {
