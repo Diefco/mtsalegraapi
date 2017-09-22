@@ -36,6 +36,7 @@
     <p>{l s='Seleccione los contactos que desea subir' mod='mtsalegraapi'}</p>
     <fieldset>
         <form action="" method="post" class="form-inline">
+            <input type="hidden" id="ProductCreate" name="ProductCreate" value="Crear un producto">
             <div class="form-group">
                 <table class="table-bordered table-condensed table-striped">
                     <tr>
@@ -69,44 +70,35 @@
                         <th>
                             {l s='Precio de Venta' mod='mtsalegraapi'}
                         </th>
+                        <th>
+                            {l s='Observaciones' mod='mtsalegraapi'}
+                        </th>
                     </tr>
                     {foreach from=$products key=idProduct item=product}
                         <tr>
                             <td>
-                                <input type="radio" name="product_{$idProduct|escape:'htmlall':'UTF-8'}_option"
+                                <input type="radio" name="product_option_{$idProduct|escape:'htmlall':'UTF-8'}"
                                        value="upload">
                             </td>
                             <td>
-                                <input type="radio" name="product_{$idProduct|escape:'htmlall':'UTF-8'}_option"
+                                <input type="radio" name="product_option_{$idProduct|escape:'htmlall':'UTF-8'}"
                                        value="ignore">
                             </td>
                             <td>
                                 {$product.name|escape:'htmlall':'UTF-8'}
-                                <input type="hidden" id="product_{$idProduct|escape:'htmlall':'UTF-8'}_name"
-                                       name="product_{$idProduct|escape:'htmlall':'UTF-8'}_name"
-                                       value="{$product.name|escape:'htmlall':'UTF-8'}">
                             </td>
                             <td>
                                 {$product.description|escape:'htmlall':'UTF-8'}
-                                <input type="hidden" id="product_{$idProduct|escape:'htmlall':'UTF-8'}_description"
-                                       name="product_{$idProduct|escape:'htmlall':'UTF-8'}_description"
-                                       value="{$product.description|escape:'htmlall':'UTF-8'}">
                             </td>
                             <td>
                                 {$product.reference|escape:'htmlall':'UTF-8'}
-                                <input type="hidden" id="product_{$idProduct|escape:'htmlall':'UTF-8'}_reference"
-                                       name="product_{$idProduct|escape:'htmlall':'UTF-8'}_reference"
-                                       value="{$product.reference|escape:'htmlall':'UTF-8'}">
                             </td>
                             <td>
                                 {$product.inventory.initialQuantity|number_format:0|escape:'htmlall':'UTF-8'}
-                                <input type="hidden" id="product_{$idProduct|escape:'htmlall':'UTF-8'}_initialQuantity"
-                                       name="product_{$idProduct|escape:'htmlall':'UTF-8'}_initialQuantity"
-                                       value="{$product.inventory.initialQuantity|escape:'htmlall':'UTF-8'}">
                             </td>
                             <td>
-                                <select name="product_{$idProduct|escape:'htmlall':'UTF-8'}_unit"
-                                        id="product_{$idProduct|escape:'htmlall':'UTF-8'}_unit">
+                                <select name="product_unit_{$idProduct|escape:'htmlall':'UTF-8'}"
+                                        id="product_unit_{$idProduct|escape:'htmlall':'UTF-8'}">
                                     <option value="unit">{l s='Unidad' mod='mtsalegraapi'}</option>
                                     <option value="centimeter">{l s='Centímetro' mod='mtsalegraapi'}</option>
                                     <option value="meter">{l s='Metro' mod='mtsalegraapi'}</option>
@@ -127,22 +119,16 @@
                             </td>
                             <td>
                                 $ {$product.inventory.unitCost|number_format:0|escape:'htmlall':'UTF-8'}
-                                <input type="hidden" id="product_{$idProduct|escape:'htmlall':'UTF-8'}_unitCost"
-                                       name="product_{$idProduct|escape:'htmlall':'UTF-8'}_unitCost"
-                                       value="{$product.inventory.unitCost|escape:'htmlall':'UTF-8'}">
                             </td>
                             <td>
                                 {$product.tax.name|escape:'htmlall':'UTF-8'}
                                 : {$product.tax.value|number_format:0|escape:'htmlall':'UTF-8'}%
-                                <input type="hidden" id="product_{$idProduct|escape:'htmlall':'UTF-8'}_tax"
-                                       name="product_{$idProduct|escape:'htmlall':'UTF-8'}_tax"
-                                       value="{$product.tax.alegra|escape:'htmlall':'UTF-8'}">
                             </td>
                             <td>
                                 $ {$product.price|number_format:0|escape:'htmlall':'UTF-8'}
-                                <input type="hidden" id="product_{$idProduct|escape:'htmlall':'UTF-8'}_price"
-                                       name="product_{$idProduct|escape:'htmlall':'UTF-8'}_price"
-                                       value="{$product.price|escape:'htmlall':'UTF-8'}">
+                            </td>
+                            <td>
+                                <textarea name="product_observations_{$idCustomer|escape:'htmlall':'UTF-8'}"></textarea>
                             </td>
                         </tr>
                     {/foreach}
