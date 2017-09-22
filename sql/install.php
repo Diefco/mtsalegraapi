@@ -42,6 +42,7 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mtsalegraapi_products` 
     `id_product_store` INT(11) NOT NULL,
     `id_product_alegra` INT(11) NULL,
     `product_ignored` BOOLEAN,
+    `observations` VARCHAR(255) NULL,
     PRIMARY KEY  (`id_product_store`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
@@ -49,8 +50,7 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mtsalegraapi_contacts` 
     `id_contact_store` INT(11) NOT NULL,
     `id_contact_alegra` INT(11) NULL,
     `contact_ignored` BOOLEAN,
-    `alias` VARCHAR(100),
-    `observations` VARCHAR(255),
+    `observations` VARCHAR(255) NULL,
     PRIMARY KEY  (`id_contact_store`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
@@ -72,4 +72,3 @@ foreach ($sql as $query) {
         return false;
     }
 }
-
