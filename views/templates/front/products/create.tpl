@@ -28,9 +28,6 @@
 *}
 
 <h1>{l s='Subir Productos' mod='mtsalegraapi'}</h1>
-{if isset($errorMsg)}
-    {$errorMsg|escape:'htmlall':'UTF-8'}
-{/if}
 
 {if isset($products) && !empty($products)}
     <p>{l s='Seleccione los contactos que desea subir' mod='mtsalegraapi'}</p>
@@ -128,7 +125,7 @@
                                 $ {$product.price|number_format:0|escape:'htmlall':'UTF-8'}
                             </td>
                             <td>
-                                <textarea name="product_observations_{$idCustomer|escape:'htmlall':'UTF-8'}"></textarea>
+                                <textarea name="product_observations_{$idProduct|escape:'htmlall':'UTF-8'}"></textarea>
                             </td>
                         </tr>
                     {/foreach}
