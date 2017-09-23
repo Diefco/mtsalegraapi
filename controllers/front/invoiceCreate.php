@@ -45,7 +45,7 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
         $this->firstInvoicesCall();
 
         $mts_join = $this->dbQueryJoin(
-            'id_order',
+            'id_order, id_customer, id_cart',
             'orders',
             'id_order_store',
             'mtsalegraapi_invoices',
@@ -59,7 +59,7 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
             $this->context->smarty->assign('products', $productData);
 
             if (Tools::isSubmit('ProductCreate')) {
-                $this->processProductCreate($productData);
+                $this->processInvoiceCreate($productData);
                 Tools::redirect($this->context->link->getModuleLink(
                     'mtsalegraapi',
                     'productCreate',
