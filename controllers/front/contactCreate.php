@@ -45,12 +45,21 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         $this->firstCustomerCall();
 
         $mts_join = $this->dbQueryJoin(
-            'id_customer',
+            'ps_customer.id_customer',
             'customer',
-            'id_contact_store',
-            'mtsalegraapi_contacts',
-            'id_contact_alegra',
-            'contact_ignored'
+            array(
+                array(
+                    'table' => 'orders',
+                    'alias' => null,
+                    'on' => 'ps_orders.id_customer = ps_customer.id_customer'
+                ),
+                array(
+                    'table' => 'mtsalegraapi_contacts',
+                    'alias' => null,
+                    'on' => 'ps_customer.id_customer = ps_mtsalegraapi_contacts.id_contact_store'
+                )
+            ),
+            'ps_mtsalegraapi_contacts.id_contact_alegra is NULL AND (ps_orders.current_state = 2 OR ps_orders.current_state = 12)'
         );
 
         if (count($mts_join) > 0) {
@@ -149,40 +158,31 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         }
     }
 
-    private function dbQueryJoin($select, $from, $leftColumn, $leftTable, $leftWhere_1, $leftWhere_2, $orderBy = null, $alias = null)
+    private function dbQueryJoin($select, $from, $leftJoin, $where = null, $orderBy = null)
     {
         // Get the limit number to send a DB Query.
         $limitQuery = Configuration::get('mts_AlgApi_limitQuery');
 
-        $rightTable = $from;
-
         if (is_array($select)) {
-            $rightColumn = $select[0];
-            $select_query = implode(', ', $select);
-        } else {
-            $select_query = $select;
-            $rightColumn = $select;
+            $select = implode(', ', $select);
         }
 
+        $sql =  new DbQuery();
+        $sql->select($select)
+            ->from($from);
 
-        $sql = new DbQuery();
-        $sql
-            ->select($select_query)
-            ->from($from)
-            ->leftJoin(
-                $leftTable,
-                $alias,
-                _DB_PREFIX_ . $rightTable . '.' . $rightColumn . ' = ' .
-                _DB_PREFIX_ . $leftTable . '.' . $leftColumn
-            )
-            ->where(
-                _DB_PREFIX_ . $leftTable . '.' . $leftWhere_1 . ' is NULL ||' .
-                _DB_PREFIX_ . $leftTable . '.' . $leftWhere_2 . ' is NULL'
-            )
-            ->limit($limitQuery);
+        foreach ($leftJoin as $query) {
+            $sql->leftJoin($query['table'], $query['alias'], $query['on']);
+        }
+
+        $sql->where($where);
+
         if ($orderBy != null) {
             $sql->orderBy($orderBy);
         }
+
+        $sql->limit($limitQuery);
+
         return Db::getInstance()->executeS($sql);
     }
 
