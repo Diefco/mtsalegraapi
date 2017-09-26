@@ -56,7 +56,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                 array(
                     'table' => 'mtsalegraapi_products',
                     'alias' => null,
-                    'on' => 'ps_cart_product.id_product = ps_mtsalegraapi_products.id_product_store'
+                    'on' => 'ps_cart_product.id_product_attribute = ps_mtsalegraapi_products.id_attribute_store'
                 )
             ),
             'ps_mtsalegraapi_products.id_product_alegra is NULL AND (ps_orders.current_state = 2 OR ps_orders.current_state = 12)'
@@ -324,7 +324,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                                 array(
                                     'table' => 'mtsalegraapi_products',
                                     'alias' => null,
-                                    'on' => 'ps_product.id_product = ps_mtsalegraapi_products.id_product_store'
+                                    'on' => 'ps_product_attribute.id_product_attribute = ps_mtsalegraapi_products.id_attribute_store'
                                 ),
                                 array(
                                     'table' => 'orders',
@@ -337,10 +337,10 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                                     'on' => 'ps_product.id_product = ps_product_lang.id_product'
                                 ),
                                 array(
-                                'table' => 'tax_rule',
-                                'alias' => null,
-                                'on' => 'ps_product.id_tax_rules_group = ps_tax_rule.id_tax'
-                            )
+                                    'table' => 'tax_rule',
+                                    'alias' => null,
+                                    'on' => 'ps_product.id_tax_rules_group = ps_tax_rule.id_tax'
+                                )
                             ),
                             '
                             ps_mtsalegraapi_products.id_product_alegra is NULL AND 
@@ -399,6 +399,8 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                                 FILTER_VALIDATE_FLOAT
                             )
                         );
+
+                        $productsArray[$attribute]['id_product'] = $id_product;
                     }
                 }
             }
@@ -416,49 +418,44 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         $products = array();
         $observations = array();
         foreach ($keys as $key) {
-            if ($key != 'fc' && $key != 'controller' && $key != 'module' && $key != 'ProductCreate') {
-                if (Tools::strrpos($key, 'product_option') !== false) {
-                    $value = explode('_', $key);
-                    $productData[$value[2]]['tax'] = $productData[$value[2]]['tax']['alegra'];
-                    $productData[$value[2]]['inventory']['unit'] = Tools::getValue('product_unit_' . $value[2]);
-                    $observations[$value[2]] = 'Unidad: ' . Tools::getValue('product_unit_' . $value[2]) . ' | ' .
-                        Tools::getValue('product_observations_' . $value[2]);
-                    if (Tools::getValue($key) == 'upload') {
-                        $products[] = $value[2];
-                    } elseif (Tools::getValue($key) == 'ignore') {
-//                        $this->dbInsert(
-//                            'mtsalegraapi_products',
-//                            array(
-//                                'id_product_store' => $value[2],
-//                                'id_product_alegra' => 0,
-//                                'product_ignored' => 1,
-//                                'observations' => $observations[$value[2]]
-//                            )
-//                        );
-                    }
-                }
-            }
-        }
-
-        $request = array();
-
-        foreach ($products as $key) {
-            $request[$key] = $this->sendToApi($this->urlApi, 'post', $productData[$key]);
-        }
-
-        if (count($request) > 0) {
-            foreach ($request as $customer => $data) {
-                if ($data[0] == true) {
+            if (Tools::strrpos($key, 'product_option') !== false) {
+                $attribute = explode('_', $key);
+                $productData[$attribute[2]]['tax'] = $productData[$attribute[2]]['tax']['alegra'];
+                $productData[$attribute[2]]['inventory']['unit'] = Tools::getValue('product_unit_' . $attribute[2]);
+                $observations[$attribute[2]] = 'Unidad: ' . Tools::getValue('product_unit_' . $attribute[2]) . ' | ' .
+                    Tools::getValue('product_observations_' . $attribute[2]);
+                if (Tools::getValue($key) == 'upload') {
+                    $products[$productData[$attribute[2]]['id_product']][] = $attribute[2];
+                } elseif (Tools::getValue($key) == 'ignore') {
                     $this->dbInsert(
                         'mtsalegraapi_products',
                         array(
-                            'id_product_store' => $customer,
-                            'id_product_alegra' => $data[1]['id'],
-                            'product_ignored' => 0,
-                            'observations' => $observations[$customer]
+                            'id_product_store' => $productData[$attribute[2]]['id_product'],
+                            'id_attribute_store' => $attribute[2],
+                            'id_product_alegra' => 0,
+                            'product_ignored' => 1,
+                            'observations' => $observations[$attribute[2]]
                         )
                     );
                 }
+                array_pop($productData[$attribute[2]]);
+            }
+        }
+
+        foreach ($products as $key => $id_attribute) {
+            $request = $this->sendToApi($this->urlApi, 'post', $productData[$id_attribute[0]]);
+
+            if ($request[0] == true) {
+                $this->dbInsert(
+                    'mtsalegraapi_products',
+                    array(
+                        'id_product_store' => $key,
+                        'id_attribute_store' => $id_attribute[0],
+                        'id_product_alegra' => $request[1]['id'],
+                        'product_ignored' => 0,
+                        'observations' => $observations[$key]
+                    )
+                );
             }
         }
     }
