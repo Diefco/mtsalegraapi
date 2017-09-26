@@ -30,7 +30,7 @@
 
 class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontController
 {
-    public $urlApi = 'items';
+    public $urlApi = 'invoices';
 
     public function initContent()
     {
@@ -42,27 +42,68 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
         $this->validateCookieAuth($cookie);
 
         // Execute the auto-ignore for Demo products
-        $this->firstInvoicesCall();
+        $this->firstInvoiceCall();
 
         $mts_join = $this->dbQueryJoin(
-            'id_order, id_customer, id_cart',
+            'ps_orders.id_order, 
+            ps_orders.id_customer, 
+            ps_orders.id_cart, 
+            ps_orders.payment, 
+            ps_orders.module, 
+            ps_orders.total_paid_tax_incl, 
+            ps_orders.total_paid_tax_excl',
             'orders',
-            'id_order_store',
-            'mtsalegraapi_invoices',
-            'id_order_alegra',
-            'order_ignored',
-            'id_order'
+            array(
+                array(
+                    'table' => 'mtsalegraapi_invoices',
+                    'alias' => null,
+                    'on' => 'ps_orders.id_order = ps_mtsalegraapi_invoices.id_order_store'
+                )
+            ),
+            'ps_mtsalegraapi_invoices.id_order_alegra is NULL AND (ps_orders.current_state = 2 OR ps_orders.current_state = 12)'
         );
 
-        if (count($mts_join) > 0) {
-            $productData = $this->prepareData($mts_join);
-            $this->context->smarty->assign('products', $productData);
+        $invoices = array();
 
-            if (Tools::isSubmit('ProductCreate')) {
-                $this->processInvoiceCreate($productData);
+        foreach ($mts_join as $invoiceData) {
+            if (array_key_exists($invoiceData['id_order'], $invoices) === false) {
+                $invoices[$invoiceData['id_order']] = array();
+            }
+
+            if (array_key_exists($invoiceData['id_customer'], $invoices[$invoiceData['id_order']]) === false) {
+                $invoices[$invoiceData['id_order']]['id_customer'] = $invoiceData['id_customer'];
+            }
+
+            if (array_key_exists($invoiceData['id_cart'], $invoices[$invoiceData['id_order']]) === false) {
+                $invoices[$invoiceData['id_order']]['id_cart'] = $invoiceData['id_cart'];
+            }
+
+            if (array_key_exists($invoiceData['payment'], $invoices[$invoiceData['id_order']]) === false) {
+                $invoices[$invoiceData['id_order']]['payment'] = $invoiceData['payment'];
+            }
+
+            if (array_key_exists($invoiceData['module'], $invoices[$invoiceData['id_order']]) === false) {
+                $invoices[$invoiceData['id_order']]['module'] = $invoiceData['module'];
+            }
+
+            if (array_key_exists($invoiceData['total_paid_tax_incl'], $invoices[$invoiceData['id_order']]) === false) {
+                $invoices[$invoiceData['id_order']]['total_paid_tax_incl'] = filter_var($invoiceData['total_paid_tax_incl'], FILTER_VALIDATE_FLOAT);
+            }
+
+            if (array_key_exists($invoiceData['total_paid_tax_excl'], $invoices[$invoiceData['id_order']]) === false) {
+                $invoices[$invoiceData['id_order']]['total_paid_tax_excl'] = filter_var($invoiceData['total_paid_tax_excl'], FILTER_VALIDATE_FLOAT);
+            }
+        }
+
+        if (count($invoices) > 0) {
+            $invoiceData = $this->prepareData($invoices);
+            $this->context->smarty->assign('invoices', $invoiceData);
+
+            if (Tools::isSubmit('InvoiceCreate')) {
+                $this->processInvoiceCreate($invoiceData);
                 Tools::redirect($this->context->link->getModuleLink(
                     'mtsalegraapi',
-                    'productCreate',
+                    'invoiceCreate',
                     array(),
                     Configuration::get('PS_SSL_ENABLED')
                 ));
@@ -106,9 +147,9 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
         return $authToken;
     }
 
-    private function firstInvoicesCall()
+    private function firstInvoiceCall()
     {
-        $mts_orders = $this->dbQuery(
+        $mts_invoice = $this->dbQuery(
             'id_order_store',
             'mtsalegraapi_invoices',
             null,
@@ -116,65 +157,64 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
             1
         );
 
-        if (count($mts_orders) == 0) {
-            $store_orders = $this->dbQuery(
-                'id_order',
+        if (count($mts_invoice) == 0) {
+            $store_invoice = $this->dbQuery(
+                'id_order, id_customer',
                 'orders',
-                'id_customer = 1',
+                null,
                 'id_order',
                 5
             );
 
             //  First Execution (Module recently installed)
-            if (count($store_orders) > 0) {
-                $orders = array();
+            if (count($store_invoice) > 0 &&
+                $store_invoice[0]['id_order'] == 1 && $store_invoice[0]['id_customer'] = 1 &&
+                    $store_invoice[1]['id_order'] == 2 && $store_invoice[1]['id_customer'] = 1 &&
+                        $store_invoice[2]['id_order'] == 3 && $store_invoice[2]['id_customer'] = 1 &&
+                            $store_invoice[3]['id_order'] == 4 && $store_invoice[3]['id_customer'] = 1 &&
+                                $store_invoice[4]['id_order'] == 5 && $store_invoice[4]['id_customer'] = 1) {
+                $products = array();
                 for ($i = 1; $i <= 5; $i++) {
-                    $orders[] = array(
+                    $products[] = array(
                         'id_order_store' => $i,
                         'id_order_alegra' => 0,
-                        'order_ignored' => true
+                        'invoice_ignored' => true
                     );
                 }
 
-                Db::getInstance()->insert('mtsalegraapi_invoices', $orders);
+                Db::getInstance()->insert('mtsalegraapi_invoices', $products);
             }
         }
     }
 
-    private function dbQueryJoin($select, $from, $leftColumn, $leftTable, $leftWhere_1, $leftWhere_2, $orderBy = null, $alias = null)
+    private function dbQueryJoin($select, $from, $leftJoin = null, $where = null, $orderBy = null, $limit = null)
     {
-        // Get the limit number to send a DB Query.
-        $limitQuery = Configuration::get('mts_AlgApi_limitQuery');
-
-        $rightTable = $from;
-
         if (is_array($select)) {
-            $rightColumn = $select[0];
-            $select_query = implode(', ', $select);
-        } else {
-            $select_query = $select;
-            $rightColumn = $select;
+            $select = implode(', ', $select);
         }
 
-
         $sql = new DbQuery();
-        $sql
-            ->select($select_query)
-            ->from($from)
-            ->leftJoin(
-                $leftTable,
-                $alias,
-                _DB_PREFIX_ . $rightTable . '.' . $rightColumn . ' = ' .
-                _DB_PREFIX_ . $leftTable . '.' . $leftColumn
-            )
-            ->where(
-                _DB_PREFIX_ . $leftTable . '.' . $leftWhere_1 . ' is NULL ||' .
-                _DB_PREFIX_ . $leftTable . '.' . $leftWhere_2 . ' is NULL'
-            )
-            ->limit($limitQuery);
+        $sql->select($select)
+            ->from($from);
+
+        if ($leftJoin != null) {
+            foreach ($leftJoin as $query) {
+                $sql->leftJoin($query['table'], $query['alias'], $query['on']);
+            }
+        }
+
+        $sql->where($where);
+
         if ($orderBy != null) {
             $sql->orderBy($orderBy);
         }
+
+        if ($limit != null) {
+            $sql->limit($limit);
+        }
+
+//        $sql->limit($limitQuery);
+
         return Db::getInstance()->executeS($sql);
     }
 
@@ -212,224 +252,139 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
 
     private function prepareData($joinResult)
     {
-        $taxesStoreArray = $this->dbQuery(
-            array(
-                'id_tax',
-                'rate'
-            ),
-            'tax',
-            null,
-            'id_tax'
-        );
+        $invoices = array();
+        foreach ($joinResult as $id_order => $order_detail) {
 
-        $nameTaxes = $this->dbQuery(
-            array(
-                'id_tax',
-                'name'
-            ),
-            'tax_lang',
-            'id_lang = 1',
-            'id_tax'
-        );
+            $date = date('Y-m-d ');
+            $dueDate = date('Y-m-d', strtotime('+1 day'));
 
-        foreach ($taxesStoreArray as $index => $tax) {
-            if ($tax['id_tax'] === $nameTaxes[$index]['id_tax']) {
-                $taxesStoreArray[$index]['name'] = $nameTaxes[$index]['name'];
+            $clientAlegra = $this->dbQuery(
+                'id_contact_alegra',
+                'mtsalegraapi_contacts',
+                'id_contact_store = ' . $order_detail['id_customer'],
+                'id_contact_store',
+                1
+            );
+
+            $clientStore = $this->dbQuery(
+                'id_customer, company, ape, siret',
+                'customer',
+                'id_customer = ' . $order_detail['id_customer'],
+                'id_customer',
+                1
+            );
+
+            $itemsPrev = $this->dbQueryJoin(
+                'ps_cart_product.id_product, 
+                ps_cart_product.id_product_attribute, 
+                ps_cart_product.quantity, 
+                ps_product.price as productPrice, 
+                ps_product_attribute.price as attributePrice',
+                'cart_product',
+                array(
+                    array(
+                        'table' => 'product',
+                        'alias' => null,
+                        'on' => 'ps_product.id_product = ps_cart_product.id_product',
+                    ),
+                    array(
+                        'table' => 'product_attribute',
+                        'alias' => null,
+                        'on' => 'ps_cart_product.id_product_attribute = ps_product_attribute.id_product_attribute',
+                    ),
+                    array(
+                        'table' => 'orders',
+                        'alias' => null,
+                        'on' => 'ps_orders.id_order  = ' . $id_order,
+                    ),
+                ),
+                'ps_cart_product.id_product_attribute = ps_product_attribute.id_product_attribute AND
+                ps_orders.id_order = ' . $id_order . ' AND 
+                ps_orders.id_cart = ps_cart_product.id_cart'
+            );
+
+            $items = array();
+
+            foreach ($itemsPrev as $item) {
+                $query = $this->dbQuery(
+                    'id_product_alegra',
+                    'mtsalegraapi_products',
+                    'id_product_store = ' . $item['id_product'] . ' AND id_attribute_store = ' . $item['id_product_attribute'],
+                    'id_product_alegra',
+                    1
+                );
+
+                $items[] = array(
+                    'id' => $query[0]['id_product_alegra'],
+                    'price' => (filter_var($item['productPrice'], FILTER_VALIDATE_FLOAT) + filter_var($item['attributePrice'], FILTER_VALIDATE_FLOAT)),
+                    'quantity' => filter_var($item['quantity'], FILTER_VALIDATE_FLOAT)
+                );
             }
+
+            $invoices[$id_order] = array(
+                'date' => $date,
+                'dueDate' => $dueDate,
+                'client' => $clientAlegra[0]['id_contact_alegra'],
+                'items' => $items,
+                'payments' => array(
+                    'date' => $date,
+                    'account' => array(
+                        'id' => 1
+                    ),
+                    'amount' => $order_detail['total_paid_tax_incl'],
+                    'anotations' => 'Pagado por medio de "' . $order_detail['payment'] . '" con el módulo "' . $order_detail['module'] . '"'
+                ),
+                'customer_info' => $clientStore
+            );
+
+//            $this->printer($invoices);
+            return $invoices;
         }
-
-        $taxesAlegraArray = $this->sendToApi('taxes', 'get', null);
-
-        $productsArray = array();
-
-        if ($taxesAlegraArray[0]) {
-            $relatedTaxes = array();
-
-            foreach ($taxesAlegraArray[1] as $alegraIndex => $alegraTax) {
-                foreach ($taxesStoreArray as $storeIndex => $storeTax) {
-                    $storeTaxRate = filter_var($storeTax['rate'], FILTER_VALIDATE_FLOAT);
-                    $alegraTaxRate = filter_var($alegraTax['percentage'], FILTER_VALIDATE_FLOAT);
-                    if (stristr($storeTax['name'], $alegraTax['name']) !== false &&
-                        $storeTaxRate == $alegraTaxRate) {
-                        $relatedTaxes[] = array(
-                            'id_tax_alegra' => $alegraTax['id'],
-                            'id_tax_store' => $storeTax['id_tax'],
-                            'tax_value' => $storeTaxRate,
-                            'tax_name' => $alegraTax['name'],
-                        );
-                    }
-                }
-            }
-
-            foreach ($joinResult as $indexProduct => $product) {
-                // Get the short description for each product
-                $descriptionArray = $this->dbQuery(
-                    array(
-                        'description_short',
-                        'name'
-                    ),
-                    'product_lang',
-                    'id_product = ' . $product['id_product'] . ' && id_lang = 1',
-                    null,
-                    1
-                );
-
-                // Get the price for each product (without attributes)
-                $priceArray = $this->dbQuery(
-                    array(
-                        'price',
-                        'wholesale_price'
-                    ),
-                    'product_shop',
-                    'id_product = ' . $product['id_product'],
-                    null,
-                    1
-                );
-
-                // Get the quantity for each product (without attributes)
-                $quantityArray = $this->dbQuery(
-                    'quantity',
-                    'stock_available',
-                    'id_product = ' . $product['id_product'],
-                    null,
-                    1
-                );
-
-                // Get the tax rules registered in the Store
-                $taxRulesArray = $this->dbQuery(
-                    array(
-                        'id_tax_rules_group',
-                        'id_tax',
-                        'behavior'
-                    ),
-                    'tax_rule',
-                    'id_tax_rules_group = ' . $product['id_tax_rules_group']
-                );
-
-                if (count($taxRulesArray) != 1 || (
-                        $taxRulesArray[0]['behavior'] != 0 || $taxRulesArray[0]['behavior'] != '0'
-                    )
-                ) {
-                    $taxException = true;
-                } else {
-                    $taxException = false;
-                }
-
-                if (!$taxException) {
-                    foreach ($relatedTaxes as $indexRelatedTax => $relatedTax) {
-                        if ($taxRulesArray[0]['id_tax'] == $relatedTax['id_tax_store']) {
-                            $taxAlegra = filter_var(
-                                $relatedTax['id_tax_alegra'],
-                                FILTER_VALIDATE_INT
-                            );
-                            $taxStore = filter_var(
-                                $relatedTax['id_tax_store'],
-                                FILTER_VALIDATE_INT
-                            );
-                            $taxValue = filter_var(
-                                $relatedTax['tax_value'],
-                                FILTER_VALIDATE_INT
-                            );
-                            $taxName = $relatedTax['tax_name'];
-                        }
-                    }
-                }
-
-                $productsArray[$product['id_product']] = array(
-                    'name' => filter_var(
-                        strip_tags($descriptionArray[0]['name']),
-                        FILTER_SANITIZE_FULL_SPECIAL_CHARS,
-                        FILTER_FLAG_NO_ENCODE_QUOTES
-                    ),
-                    'description' => filter_var(
-                        strip_tags($descriptionArray[0]['description_short']),
-                        FILTER_SANITIZE_FULL_SPECIAL_CHARS,
-                        FILTER_FLAG_NO_ENCODE_QUOTES
-                    ),
-                    'reference' => filter_var(
-                        strip_tags($joinResult[$indexProduct]['reference']),
-                        FILTER_SANITIZE_FULL_SPECIAL_CHARS,
-                        FILTER_FLAG_NO_ENCODE_QUOTES
-                    ),
-                    'inventory' => array(
-                        'unit' => null,
-                        'unitCost' => filter_var(
-                            $priceArray[0]['wholesale_price'],
-                            FILTER_VALIDATE_FLOAT
-                        ),
-                        'initialQuantity' => filter_var(
-                            $quantityArray[0]['quantity'],
-                            FILTER_VALIDATE_INT
-                        ),
-                    ),
-                    'tax' => array(
-                        'alegra' => $taxAlegra,
-                        'store' => $taxStore,
-                        'value' => $taxValue,
-                        'name' => $taxName,
-                    ),
-                    'price' => filter_var(
-                        $priceArray[0]['price'],
-                        FILTER_VALIDATE_FLOAT
-                    )
-                );
-            }
-        }
-
-        return $productsArray;
+        return false;
     }
 
-    private function processInvoiceCreate($productData)
+    private function processInvoiceCreate($invoiceData)
     {
         $postValues = Tools::getAllValues();
         $keys = array_keys($postValues);
 
-        $products = array();
-        $observations = array();
+        $invoices = array();
+
         foreach ($keys as $key) {
-            if ($key != 'fc' && $key != 'controller' && $key != 'module' && $key != 'ProductCreate') {
-                if (Tools::strrpos($key, 'product_option') !== false) {
-                    $value = explode('_', $key);
-                    $productData[$value[2]]['tax'] = $productData[$value[2]]['tax']['alegra'];
-                    $productData[$value[2]]['inventory']['unit'] = Tools::getValue('product_unit_' . $value[2]);
-                    $observations[$value[2]] = 'Unidad: ' . Tools::getValue('product_unit_' . $value[2]) . ' | ' .
-                        Tools::getValue('product_observations_' . $value[2]);
-                    if (Tools::getValue($key) == 'upload') {
-                        $products[] = $value[2];
-                    } elseif (Tools::getValue($key) == 'ignore') {
-                        $this->dbInsert(
-                            'mtsalegraapi_products',
-                            array(
-                                'id_product_store' => $value[2],
-                                'id_product_alegra' => 0,
-                                'product_ignored' => 1,
-                                'observations' => $observations[$value[2]]
-                            )
-                        );
-                    }
+            if (Tools::strrpos($key, 'invoice_option') !== false) {
+                $value = explode('_', $key);
+
+                if (Tools::getValue($key) == 'upload') {
+                    $invoices[] = $value[2];
+                } elseif (Tools::getValue($key) == 'ignore') {
+                    $this->dbInsert(
+                        'mtsalegraapi_invoices',
+                        array(
+                            'id_order_store' => $value[2],
+                            'id_order_alegra' => 0,
+                            'invoice_ignored' => 1
+                        )
+                    );
                 }
             }
         }
 
-        $request = array();
+        foreach ($invoices as $id_order) {
+            array_pop($invoiceData[$id_order]);
 
-        foreach ($products as $key) {
-            $request[$key] = $this->sendToApi($this->urlApi, 'post', $productData[$key]);
-        }
+            $request = $this->sendToApi($this->urlApi, 'post', $invoiceData[$id_order]);
 
-        if (count($request) > 0) {
-            foreach ($request as $customer => $data) {
-                if ($data[0] == true) {
-                    $this->dbInsert(
-                        'mtsalegraapi_products',
-                        array(
-                            'id_product_store' => $customer,
-                            'id_product_alegra' => $data[1]['id'],
-                            'product_ignored' => 0,
-                            'observations' => $observations[$customer]
-                        )
-                    );
-                }
+            $this->printer($request);
+
+            if ($request[0] == true) {
+                $this->dbInsert(
+                    'mtsalegraapi_invoices',
+                    array(
+                        'id_order_store' => $id_order,
+                        'id_order_alegra' => $request[1]['id'],
+                        'invoice_ignored' => 0
+                    )
+                );
             }
         }
     }
