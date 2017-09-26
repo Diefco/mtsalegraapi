@@ -39,11 +39,13 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mtsalegraapi_invoices` 
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mtsalegraapi_products` (
+    `id_product` INT(11) NOT NULL AUTO_INCREMENT,
     `id_product_store` INT(11) NOT NULL,
+    `id_attribute_store` INT(11) NOT NULL,
     `id_product_alegra` INT(11) NULL,
     `product_ignored` BOOLEAN,
     `observations` VARCHAR(255) NULL,
-    PRIMARY KEY  (`id_product_store`)
+    PRIMARY KEY  (`id_product`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mtsalegraapi_contacts` (
@@ -55,17 +57,17 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mtsalegraapi_contacts` 
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 $sql[] = "UPDATE `" . _DB_PREFIX_ . "address_format`
-SET `format`='firstname
-lastname 
-address1 
-address2 
-postcode 
-city 
-Country:name 
-phone 
-phone_mobile 
-Customer:siret'
-WHERE `id_country`=69";
+    SET `format`='firstname
+    lastname 
+    address1 
+    address2 
+    postcode 
+    city 
+    Country:name 
+    phone 
+    phone_mobile 
+    Customer:siret'
+    WHERE `id_country`=69";
 
 foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {
