@@ -72,6 +72,9 @@
                         </th>
                     </tr>
                     {foreach from=$products key=idProduct item=product}
+                        <input type="hidden" id="product_id_{$idProduct|escape:'htmlall':'UTF-8'}"
+                               name="product_id_{$idProduct|escape:'htmlall':'UTF-8'}"
+                               value="product_id_{$product.id_product|escape:'htmlall':'UTF-8'}">
                         <tr>
                             <td>
                                 <input type="radio" name="product_option_{$idProduct|escape:'htmlall':'UTF-8'}"

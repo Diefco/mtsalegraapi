@@ -27,13 +27,13 @@
 * @version 1.1.0
 *}
 
-<h1>{l s='Subir Facturas o Pedidos' mod='mtsalegraapi'}</h1>
+<h1>{l s='Subir Facturas' mod='mtsalegraapi'}</h1>
 
-{if isset($customers) && !empty($customers)}
-    <p>{l s='Seleccione los contactos que desea subir' mod='mtsalegraapi'}</p>
+{if isset($invoices) && !empty($invoices)}
+    <p>{l s='Seleccione las facturas que desea subir' mod='mtsalegraapi'}</p>
     <fieldset>
         <form action="" method="post" class="form-inline">
-            <input type="hidden" id="CustomerCreate" name="CustomerCreate" value="Crear un usuario">
+            <input type="hidden" id="InvoiceCreate" name="InvoiceCreate" value="Crear una factura">
             <div class="form-group">
                 <table class="table-bordered table-condensed table-striped">
                     <tr>
@@ -44,64 +44,42 @@
                             {l s='Ignorar' mod='mtsalegraapi'}
                         </th>
                         <th>
-                            {l s='Compañia' mod='mtsalegraapi'}
+                            {l s='Razón Social' mod='mtsalegraapi'}
                         </th>
                         <th>
-                            {l s='Identificación' mod='mtsalegraapi'}
+                            {l s='Tipo de Documento' mod='mtsalegraapi'}
                         </th>
                         <th>
-                            {l s='Email' mod='mtsalegraapi'}
+                            {l s='Número de Documento' mod='mtsalegraapi'}
                         </th>
                         <th>
-                            {l s='Teléfono fijo' mod='mtsalegraapi'}
-                        </th>
-                        <th>
-                            {l s='Celular' mod='mtsalegraapi'}
-                        </th>
-                        <th>
-                            {l s='Dirección' mod='mtsalegraapi'}
-                        </th>
-                        <th>
-                            {l s='Ciudad/Provincia/Pais' mod='mtsalegraapi'}
-                        </th>
-                        <th>
-                            {l s='Observaciones' mod='mtsalegraapi'}
+                            {l s='Total pagado' mod='mtsalegraapi'}
                         </th>
                     </tr>
-                    {foreach from=$customers key=idCustomer item=customer}
+                    {foreach from=$invoices key=idOrder item=invoice}
+                        <input type="hidden" id="invoice_id_{$idOrder|escape:'htmlall':'UTF-8'}"
+                               name="invoice_id_{$idOrder|escape:'htmlall':'UTF-8'}"
+                               value="invoice_id_{$invoice.id_product|escape:'htmlall':'UTF-8'}">
                         <tr>
                             <td>
-                                <input type="radio" name="customer_option_{$idCustomer|escape:'htmlall':'UTF-8'}"
+                                <input type="radio" name="invoice_option_{$idOrder|escape:'htmlall':'UTF-8'}"
                                        value="upload">
                             </td>
                             <td>
-                                <input type="radio" name="customer_option_{$idCustomer|escape:'htmlall':'UTF-8'}"
+                                <input type="radio" name="invoice_option_{$idOrder|escape:'htmlall':'UTF-8'}"
                                        value="ignore">
                             </td>
                             <td>
-                                {$customer.name|escape:'htmlall':'UTF-8'}
+                                {$invoice.customer_info.0.company|escape:'htmlall':'UTF-8'}
                             </td>
                             <td>
-                                {$customer.identification|escape:'htmlall':'UTF-8'}
+                                {$invoice.customer_info.0.ape|escape:'htmlall':'UTF-8'}
                             </td>
                             <td>
-                                {$customer.email|escape:'htmlall':'UTF-8'}
+                                {$invoice.customer_info.0.siret|escape:'htmlall':'UTF-8'}
                             </td>
                             <td>
-                                {$customer.phonePrimary|escape:'htmlall':'UTF-8'}
-                            </td>
-                            <td>
-                                {$customer.mobile|escape:'htmlall':'UTF-8'}
-                            </td>
-                            <td>
-                                {$customer.address.address|escape:'htmlall':'UTF-8'}
-                            </td>
-                            <td>
-                                {$customer.address.city|escape:'htmlall':'UTF-8'}
-                            </td>
-                            <td>
-                                <textarea
-                                        name="customer_observations_{$idCustomer|escape:'htmlall':'UTF-8'}"></textarea>
+                                $ {$invoice.payments.amount|number_format:0|escape:'htmlall':'UTF-8'}
                             </td>
                         </tr>
                     {/foreach}
@@ -109,12 +87,12 @@
             </div>
             <div>
                 <br>
-                <input type="submit" id="submitData" value="Enviar" class="btn btn-success">
+                <input type="submit" value="Enviar" class="btn btn-success">
             </div>
         </form>
     </fieldset>
 {else}
-    <h2>{l s='Ninguna factura o pedido para subir' mod='mtsalegraapi'}</h2>
+    <h2>{l s='Ningún producto para subir' mod='mtsalegraapi'}</h2>
 {/if}
 <br>
 <a class="btn btn-primary" href="{$backLink|escape:'htmlall':'UTF-8'}">Volver</a>
