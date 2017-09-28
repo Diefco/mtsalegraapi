@@ -59,7 +59,9 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                     'on' => 'ps_cart_product.id_product_attribute = ps_mtsalegraapi_products.id_attribute_store'
                 )
             ),
-            'ps_mtsalegraapi_products.id_product_alegra is NULL AND (ps_orders.current_state = 2 OR ps_orders.current_state = 12)'
+            'ps_mtsalegraapi_products.id_product_alegra is NULL AND
+            (ps_orders.current_state = ' . Configuration::get('PS_OS_PAYMENT') . ' OR 
+            ps_orders.current_state = ' . Configuration::get('PS_OS_WS_PAYMENT') .')'
         );
 
         $products = array();
@@ -344,7 +346,8 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
                             ),
                             '
                             ps_mtsalegraapi_products.id_product_alegra is NULL AND 
-                            (ps_orders.current_state = 2 OR ps_orders.current_state = 12) AND 
+                            (ps_orders.current_state = ' . Configuration::get('PS_OS_PAYMENT') . ' OR 
+                            ps_orders.current_state = ' . Configuration::get('PS_OS_WS_PAYMENT') .') AND 
                             ps_product.id_product = ps_order_detail.product_id AND
                             ps_orders.id_order = ' . $id_order,
                             null
@@ -442,32 +445,42 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
             }
         }
 
-        foreach ($products as $key => $id_attribute) {
-            $request = $this->sendToApi($this->urlApi, 'post', $productData[$id_attribute[0]]);
+        foreach ($products as $key => $attributes) {
+            foreach ($attributes as $id_attribute) {
+                $request = $this->sendToApi($this->urlApi, 'post', $productData[$id_attribute]);
 
-            if ($request[0] == true) {
-                $this->dbInsert(
-                    'mtsalegraapi_products',
-                    array(
-                        'id_product_store' => $key,
-                        'id_attribute_store' => $id_attribute[0],
-                        'id_product_alegra' => $request[1]['id'],
-                        'product_ignored' => 0,
-                        'observations' => $observations[$key]
-                    )
-                );
+                if ($request[0] == true) {
+                    $this->dbInsert(
+                        'mtsalegraapi_products',
+                        array(
+                            'id_product_store' => $key,
+                            'id_attribute_store' => $id_attribute,
+                            'id_product_alegra' => $request[1]['id'],
+                            'product_ignored' => 0,
+                            'observations' => $observations[$id_attribute]
+                        )
+                    );
+                }
             }
         }
     }
 
     private function sendToApi($url, $method, $request = null)
     {
+        $methodsAllowed = array(
+            'POST',
+            'GET',
+            'PUT',
+            'DELETE'
+        );
+
         $method = Tools::strtoupper($method);
-        if (!($method != 'POST' || $method != 'GET') || $method == null) {
-            $this->printer('El método debe ser POST o GET.', __LINE__, false);
+
+        if (array_search($method, $methodsAllowed) === false) {
+            $this->printer('El método no es válido.', __LINE__, false);
             return false;
-        } elseif ($method == 'POST' && $request == null) {
-            $this->printer('Si el método es POST, $request no puede ser NULL', __LINE__, false);
+        } elseif (($method == 'POST' || $method == 'PUT') && $request == null) {
+            $this->printer('Si el método es POST o PUT, $request no puede ser NULL', __LINE__, false);
             return false;
         }
 
@@ -488,14 +501,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
             'warehouses',       // Warehouses or Storage
         );
 
-        $validatedUrl = false;
-        foreach ($toValidateUrl as $endpoint) {
-            if (Tools::strtolower($url) == $endpoint) {
-                $validatedUrl = true;
-            }
-        }
-
-        if (!$validatedUrl) {
+        if (array_search(Tools::strtolower($url), $toValidateUrl) === false && $method == 'POST') {
             $this->printer('El ENDPOINT no es válido', __LINE__, false);
             return false;
         }
@@ -513,7 +519,7 @@ class MtsAlegraApiProductCreateModuleFrontController extends ModuleFrontControll
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $urlRequest);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        if ($method == 'POST') {
+        if ($method == 'POST' || $method == 'PUT') {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonRequest);
         }
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
