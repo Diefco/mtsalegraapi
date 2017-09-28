@@ -59,7 +59,9 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
                     'on' => 'ps_customer.id_customer = ps_mtsalegraapi_contacts.id_contact_store'
                 )
             ),
-            'ps_mtsalegraapi_contacts.id_contact_alegra is NULL AND (ps_orders.current_state = 2 OR ps_orders.current_state = 12)'
+            'ps_mtsalegraapi_contacts.id_contact_alegra is NULL AND 
+            (ps_orders.current_state = ' . Configuration::get('PS_OS_PAYMENT') . ' OR 
+            ps_orders.current_state = ' . Configuration::get('PS_OS_WS_PAYMENT') . ')'
         );
 
         if (count($mts_join) > 0) {
@@ -321,6 +323,7 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
                         ),
                     ),
                     'observations' => 'Tipo de Documento: ' . $contact['ape'] . ' | ',
+                    'ignoreRepeated' => false,
                 );
             }
         }
@@ -356,24 +359,38 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
             }
         }
 
-        $request = array();
+        foreach ($customers as $customer) {
+            $request = $this->sendToApi($this->urlApi, 'post', $customerData[$customer]);
 
-        foreach ($customers as $key) {
-            $request[$key] = $this->sendToApi($this->urlApi, 'post', $customerData[$key]);
-        }
+            if ($request[0] == true) {
+                $this->dbInsert(
+                    'mtsalegraapi_contacts',
+                    array(
+                        'id_contact_store' => $customer,
+                        'id_contact_alegra' => $request[1]['id'],
+                        'contact_ignored' => 0,
+                        'observations' => $request[1]['observations']
+                    )
+                );
+            } elseif ($request[0] == false && $request[0]['code'] = 2006) {
+                $tempUrl = $this->urlApi . '/?query=' . $customerData[$customer]['identification'] . '&type=client&limit=1';
+                $tempRequest = $this->sendToApi($tempUrl, 'get');
 
-        if (count($request) > 0) {
-            foreach ($request as $customer => $data) {
-                if ($data[0] == true) {
-                    $this->dbInsert(
-                        'mtsalegraapi_contacts',
-                        array(
-                            'id_contact_store' => $customer,
-                            'id_contact_alegra' => $data[1]['id'],
-                            'contact_ignored' => 0,
-                            'observations' => $data[1]['observations']
-                        )
-                    );
+                if ($tempRequest[0] == true) {
+                    $tempUrl = $this->urlApi . '/' . $tempRequest[1][0]['id'];
+                    $newRequest = $this->sendToApi($tempUrl, 'put', $customerData[$customer]['internalContacts']);
+
+                    if ($newRequest[0] == true) {
+                        $this->dbInsert(
+                            'mtsalegraapi_contacts',
+                            array(
+                                'id_contact_store' => $customer,
+                                'id_contact_alegra' => $newRequest[1]['id'],
+                                'contact_ignored' => 0,
+                                'observations' => $newRequest[1]['observations']
+                            )
+                        );
+                    }
                 }
             }
         }
@@ -381,12 +398,20 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
 
     private function sendToApi($url, $method, $request = null)
     {
+        $methodsAllowed = array(
+            'POST',
+            'GET',
+            'PUT',
+            'DELETE'
+        );
+
         $method = Tools::strtoupper($method);
-        if (!($method != 'POST' || $method != 'GET') || $method == null) {
-            $this->printer('El método debe ser POST o GET.', __LINE__, false);
+
+        if (array_search($method, $methodsAllowed) === false) {
+            $this->printer('El método no es válido.', __LINE__, false);
             return false;
-        } elseif ($method == 'POST' && $request == null) {
-            $this->printer('Si el método es POST, $request no puede ser NULL', __LINE__, false);
+        } elseif (($method == 'POST' || $method == 'PUT') && $request == null) {
+            $this->printer('Si el método es POST o PUT, $request no puede ser NULL', __LINE__, false);
             return false;
         }
 
@@ -407,14 +432,7 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
             'warehouses',       // Warehouses or Storage
         );
 
-        $validatedUrl = false;
-        foreach ($toValidateUrl as $endpoint) {
-            if (Tools::strtolower($url) == $endpoint) {
-                $validatedUrl = true;
-            }
-        }
-
-        if (!$validatedUrl) {
+        if (array_search(Tools::strtolower($url), $toValidateUrl) === false && $method == 'POST') {
             $this->printer('El ENDPOINT no es válido', __LINE__, false);
             return false;
         }
@@ -432,7 +450,7 @@ class MtsAlegraApiContactCreateModuleFrontController extends ModuleFrontControll
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $urlRequest);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        if ($method == 'POST') {
+        if ($method == 'POST' || $method == 'PUT') {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonRequest);
         }
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
