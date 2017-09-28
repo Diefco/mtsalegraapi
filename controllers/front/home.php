@@ -144,6 +144,37 @@ class MtsAlegraApiHomeModuleFrontController extends ModuleFrontController
                 array(),
                 Configuration::get('PS_SSL_ENABLED')
             ),
+            //Payments
+            'paymentConsultOne' => $this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'paymentConsultOne',
+                array(),
+                Configuration::get('PS_SSL_ENABLED')
+            ),
+            'paymentConsultMultiple' => $this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'paymentConsultMultiple',
+                array(),
+                Configuration::get('PS_SSL_ENABLED')
+            ),
+            'paymentCreate' => $this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'paymentCreate',
+                array(),
+                Configuration::get('PS_SSL_ENABLED')
+            ),
+            'paymentEdit' => $this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'paymentEdit',
+                array(),
+                Configuration::get('PS_SSL_ENABLED')
+            ),
+            'paymentDelete' => $this->context->link->getModuleLink(
+                'mtsalegraapi',
+                'paymentDelete',
+                array(),
+                Configuration::get('PS_SSL_ENABLED')
+            ),
         );
 
         $this->context->smarty->assign('urlArray', $url);
