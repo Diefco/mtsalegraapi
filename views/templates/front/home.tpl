@@ -29,7 +29,6 @@
 
 <h1>{l s='Plataforma' mod='mtsalegraapi'}</h1>
 <div class="row container">
-    <div class="col-md-1"></div>
     <div class="btn-group-vertical col-md-3" role="group">
         <h2>{l s='Productos' mod='mtsalegraapi'}</h2>
         <a href="{$urlArray.productConsultOne|escape:'htmlall':'UTF-8'}"
@@ -65,8 +64,20 @@
         {*<a href="{$urlArray.invoiceEdit|escape:'htmlall':'UTF-8'}" class="btn btn-warning">{l s='Editar facturas' mod='mtsalegraapi'}</a>*}
         {*<a href="{$urlArray.invoiceDelete|escape:'htmlall':'UTF-8'}" class="btn btn-danger">{l s='Eliminar facturas' mod='mtsalegraapi'}</a>*}
     </div>
-    <div class="col-md-2"></div>
+
+    {*<div class="btn-group-vertical col-md-3" role="group">*}
+        {*<h2>{l s='Pagos' mod='mtsalegraapi'}</h2>*}
+        {*<a href="{$urlArray.paymentConsultOne|escape:'htmlall':'UTF-8'}"*}
+           {*class="btn btn-success">{l s='Consultar un pago' mod='mtsalegraapi'}</a>*}
+        {*<a href="{$urlArray.paymentConsultMultiple|escape:'htmlall':'UTF-8'}"*}
+           {*class="btn btn-success">{l s='Consultar varios pagos' mod='mtsalegraapi'}</a>*}
+        {*<a href="{$urlArray.paymentCreate|escape:'htmlall':'UTF-8'}"*}
+           {*class="btn btn-primary">{l s='Crear pagos' mod='mtsalegraapi'}</a>*}
+        {*<a href="{$urlArray.paymentEdit|escape:'htmlall':'UTF-8'}" class="btn btn-warning">{l s='Editar facturas' mod='mtsalegraapi'}</a>*}
+        {*<a href="{$urlArray.paymentDelete|escape:'htmlall':'UTF-8'}" class="btn btn-danger">{l s='Eliminar facturas' mod='mtsalegraapi'}</a>*}
+    {*</div>*}
 </div>
+<br>
 <div class="row container">
     <form class="form-inline" action="{$urlLogOut|escape:'htmlall':'UTF-8'}" method="post" accept-charset="utf-8">
         <input type="hidden" class="form-control" id="logout" name="logout" value="true">
