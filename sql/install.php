@@ -34,6 +34,7 @@ $excludedSql = array();
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'mtsalegraapi_invoices` (
     `id_order_store` INT(11) NOT NULL,
     `id_order_alegra` INT(11) NULL,
+    `id_payment_alegra` INT(11) NULL,
     `order_ignored` BOOLEAN,
     PRIMARY KEY  (`id_order_store`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
