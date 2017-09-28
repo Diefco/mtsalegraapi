@@ -60,7 +60,9 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
                     'on' => 'ps_orders.id_order = ps_mtsalegraapi_invoices.id_order_store'
                 )
             ),
-            'ps_mtsalegraapi_invoices.id_order_alegra is NULL AND (ps_orders.current_state = 2 OR ps_orders.current_state = 12)'
+            'ps_mtsalegraapi_invoices.id_order_alegra is NULL AND
+            (ps_orders.current_state = ' . Configuration::get('PS_OS_PAYMENT') . ' OR 
+            ps_orders.current_state = ' . Configuration::get('PS_OS_WS_PAYMENT') .')'
         );
 
         $invoices = array();
@@ -252,6 +254,52 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
 
     private function prepareData($joinResult)
     {
+        $taxesStoreArray = $this->dbQuery(
+            array(
+                'id_tax',
+                'rate'
+            ),
+            'tax',
+            null,
+            'id_tax'
+        );
+
+        $nameTaxes = $this->dbQuery(
+            array(
+                'id_tax',
+                'name'
+            ),
+            'tax_lang',
+            'id_lang = 1',
+            'id_tax'
+        );
+
+        foreach ($taxesStoreArray as $index => $tax) {
+            if ($tax['id_tax'] === $nameTaxes[$index]['id_tax']) {
+                $taxesStoreArray[$index]['name'] = $nameTaxes[$index]['name'];
+            }
+        }
+
+        $taxesAlegraArray = $this->sendToApi('taxes', 'get', null);
+
+        $relatedTaxes = array();
+
+        foreach ($taxesAlegraArray[1] as $alegraIndex => $alegraTax) {
+            foreach ($taxesStoreArray as $storeIndex => $storeTax) {
+                $storeTaxRate = filter_var($storeTax['rate'], FILTER_VALIDATE_FLOAT);
+                $alegraTaxRate = filter_var($alegraTax['percentage'], FILTER_VALIDATE_FLOAT);
+                if (stristr($storeTax['name'], $alegraTax['name']) !== false &&
+                    $storeTaxRate == $alegraTaxRate) {
+                    $relatedTaxes[] = array(
+                        'id_tax_alegra' => $alegraTax['id'],
+                        'id_tax_store' => $storeTax['id_tax'],
+                        'tax_value' => $storeTaxRate,
+                        'tax_name' => $alegraTax['name'],
+                    );
+                }
+            }
+        }
+
         $invoices = array();
         foreach ($joinResult as $id_order => $order_detail) {
 
@@ -279,7 +327,8 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
                 ps_cart_product.id_product_attribute, 
                 ps_cart_product.quantity, 
                 ps_product.price as productPrice, 
-                ps_product_attribute.price as attributePrice',
+                ps_product_attribute.price as attributePrice,
+                ps_tax_rule.id_tax',
                 'cart_product',
                 array(
                     array(
@@ -296,6 +345,11 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
                         'table' => 'orders',
                         'alias' => null,
                         'on' => 'ps_orders.id_order  = ' . $id_order,
+                    ),
+                    array(
+                        'table' => 'tax_rule',
+                        'alias' => null,
+                        'on' => 'ps_tax_rule.id_tax_rules_group  = ps_product.id_tax_rules_group',
                     ),
                 ),
                 'ps_cart_product.id_product_attribute = ps_product_attribute.id_product_attribute AND
@@ -314,9 +368,22 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
                     1
                 );
 
+                $id_tax = null;
+
+                foreach ($relatedTaxes as $tax) {
+                    if ($tax['id_tax_store'] == $item['id_tax']) {
+                        $id_tax = $tax['id_tax_alegra'];
+                    }
+                }
+
                 $items[] = array(
                     'id' => $query[0]['id_product_alegra'],
                     'price' => (filter_var($item['productPrice'], FILTER_VALIDATE_FLOAT) + filter_var($item['attributePrice'], FILTER_VALIDATE_FLOAT)),
+                    'tax' => array(
+                        array(
+                            'id' => $id_tax
+                        )
+                    ),
                     'quantity' => filter_var($item['quantity'], FILTER_VALIDATE_FLOAT)
                 );
             }
@@ -332,12 +399,11 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
                         'id' => 1
                     ),
                     'amount' => $order_detail['total_paid_tax_incl'],
-                    'anotations' => 'Pagado por medio de "' . $order_detail['payment'] . '" con el módulo "' . $order_detail['module'] . '"'
+                    'paymentMethod' => 'deposit',
+                    'anotation' => 'Pagado por medio de ' . $order_detail['payment'] . ' con el módulo ' . $order_detail['module']
                 ),
                 'customer_info' => $clientStore
             );
-
-//            $this->printer($invoices);
             return $invoices;
         }
         return false;
@@ -362,6 +428,7 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
                         array(
                             'id_order_store' => $value[2],
                             'id_order_alegra' => 0,
+                            'id_payment_alegra' => 0,
                             'invoice_ignored' => 1
                         )
                     );
@@ -372,31 +439,65 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
         foreach ($invoices as $id_order) {
             array_pop($invoiceData[$id_order]);
 
+            $payment = array_pop($invoiceData[$id_order]);
+
             $request = $this->sendToApi($this->urlApi, 'post', $invoiceData[$id_order]);
 
-            $this->printer($request);
-
             if ($request[0] == true) {
-                $this->dbInsert(
-                    'mtsalegraapi_invoices',
-                    array(
-                        'id_order_store' => $id_order,
-                        'id_order_alegra' => $request[1]['id'],
-                        'invoice_ignored' => 0
-                    )
+                $paymentComplete = array(
+                    'date' => $payment['date'],
+                    'invoices' => array(
+                        array(
+                            'id' => $request[1]['id'],
+                            'amount' => $payment['amount']
+                        ),
+                    ),
+                    'bankAccount' => 1
                 );
+
+                $paymentRequest = $this->sendToApi('payments', 'post', $paymentComplete);
+
+                if ($paymentRequest[0] == true) {
+                    $this->dbInsert(
+                        'mtsalegraapi_invoices',
+                        array(
+                            'id_order_store' => $id_order,
+                            'id_order_alegra' => $request[1]['id'],
+                            'id_payment_alegra' => $paymentRequest[1]['id'],
+                            'invoice_ignored' => 0
+                        )
+                    );
+                } else {
+                    $this->dbInsert(
+                        'mtsalegraapi_invoices',
+                        array(
+                            'id_order_store' => $id_order,
+                            'id_order_alegra' => $request[1]['id'],
+                            'id_payment_alegra' => 0,
+                            'invoice_ignored' => 0
+                        )
+                    );
+                }
             }
         }
     }
 
     private function sendToApi($url, $method, $request = null)
     {
+        $methodsAllowed = array(
+            'POST',
+            'GET',
+            'PUT',
+            'DELETE'
+        );
+
         $method = Tools::strtoupper($method);
-        if (!($method != 'POST' || $method != 'GET') || $method == null) {
-            $this->printer('El método debe ser POST o GET.', __LINE__, false);
+
+        if (array_search($method, $methodsAllowed) === false) {
+            $this->printer('El método no es válido.', __LINE__, false);
             return false;
-        } elseif ($method == 'POST' && $request == null) {
-            $this->printer('Si el método es POST, $request no puede ser NULL', __LINE__, false);
+        } elseif (($method == 'POST' || $method == 'PUT') && $request == null) {
+            $this->printer('Si el método es POST o PUT, $request no puede ser NULL', __LINE__, false);
             return false;
         }
 
@@ -417,15 +518,8 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
             'warehouses',       // Warehouses or Storage
         );
 
-        $validatedUrl = false;
-        foreach ($toValidateUrl as $endpoint) {
-            if (Tools::strtolower($url) == $endpoint) {
-                $validatedUrl = true;
-            }
-        }
-
-        if (!$validatedUrl) {
-            $this->printer('El ENDPOINT no es válido', __LINE__, false);
+        if (array_search(Tools::strtolower($url), $toValidateUrl) === false && $method == 'POST') {
+            $this->printer('El ENDPOINT no es válido: ' . $url, __LINE__, false);
             return false;
         }
 
@@ -442,7 +536,7 @@ class MtsAlegraApiInvoiceCreateModuleFrontController extends ModuleFrontControll
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $urlRequest);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        if ($method == 'POST') {
+        if ($method == 'POST' || $method == 'PUT') {
             curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonRequest);
         }
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
