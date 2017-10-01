@@ -26,3 +26,19 @@
  * @license http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  * @version 1.1.0
  */
+
+@media (min-width: 768px){
+  #module-mtsalegraapi-home #center_column.col-sm-push-3 {
+      left: 0%!important;
+  }
+}
+
+#module-mtsalegraapi-home #center_column {
+    width: 100%!important;
+}
+
+#module-mtsalegraapi-home #center_column .row.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
