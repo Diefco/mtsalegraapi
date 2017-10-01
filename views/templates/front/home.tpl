@@ -28,7 +28,7 @@
 *}
 
 <h1>{l s='Plataforma' mod='mtsalegraapi'}</h1>
-<div class="row container">
+<div class="row container flex-center">
     <div class="btn-group-vertical col-md-3" role="group">
         <h2>{l s='Productos' mod='mtsalegraapi'}</h2>
         <a href="{$urlArray.productConsultOne|escape:'htmlall':'UTF-8'}"
